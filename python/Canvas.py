@@ -1,8 +1,8 @@
 
 import numpy
-import glew_wrap as glew
+from . import glew_wrap as glew
 from OpenGL import GL
-import hardSettings
+from . import hardSettings
 
 class Canvas:
     INVALID_ID = 666
@@ -15,8 +15,8 @@ class Canvas:
         self.currentRes = 0
         self.onVideo = False
         self.kind = kind
-        self.frameID = numpy.zeros(Canvas.MAX_RES, numpy.int)+Canvas.INVALID_ID
-        self.textureID = numpy.zeros(Canvas.MAX_RES, numpy.int)+Canvas.INVALID_ID
+        self.frameID = numpy.zeros(Canvas.MAX_RES, numpy.int32)+Canvas.INVALID_ID
+        self.textureID = numpy.zeros(Canvas.MAX_RES, numpy.int32)+Canvas.INVALID_ID
         self.softRes = 0
         self.ratio2x1 = False
         if size != 0: self.SetRes(size)
@@ -136,31 +136,31 @@ class Canvas:
         res = glew.glCheckFramebufferStatusEXT(glew.GL_FRAMEBUFFER_EXT)
         if (res == glew.GL_FRAMEBUFFER_COMPLETE_EXT): return True
         elif (res == glew.GL_FRAMEBUFFER_UNSUPPORTED_EXT):
-            print "Unsupported FB!\n"
+            print( "Unsupported FB!\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT):
-            print "Incomplete: attachment !\n"
+            print( "Incomplete: attachment !\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT):
-            print "Incomplete: missing attach  FB!\n"
+            print( "Incomplete: missing attach  FB!\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_DUPLICATE_ATTACHMENT_EXT):
-            print "Incomplete: duplicate attach  FB!\n"
+            print( "Incomplete: duplicate attach  FB!\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT):
-            print "Incomplete: dimensions!\n"
+            print( "Incomplete: dimensions!\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT):
-            print "Incomplete: formats!\n"
+            print( "Incomplete: formats!\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT):
-            print "Incomplete: draw buffer!\n"
+            print( "Incomplete: draw buffer!\n")
             return False
         elif (res == glew.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT):
-            print "Incomplete: read buffer!\n"
+            print( "Incomplete: read buffer!\n")
             return False
         else:
-            print "Unknown FB error!\n"
+            print( "Unknown FB error!\n")
             return False
 
 mainCanvas = Canvas(Canvas.COLOR_AND_DEPTH, "mainCanvas")

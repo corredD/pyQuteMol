@@ -1,6 +1,9 @@
+# export LIBGL_ALWAYS_INDIRECT=1
+# export DISPLAY=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null):0
+# export PYOPENGL_PLATFORM=osmesa sudo apt-get install libosmesa6
 import os, sys
 import numpy
-import Image
+from PIL import Image
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -312,7 +315,7 @@ def onMouseDrag(x, y):
 shaders = [direct, illustr_motm, real, real2, illustr, illustr_new, qutemol1, qutemol2, qutemol3, coolb, coold, borders_cool, sem, sem2, shape, illustrm]
 
 def printHelp():
-    print '''\
+    print('''\
 Welcomd to pyQutemol
 
 Left mouse button to rotate the system
@@ -341,7 +344,7 @@ c             - change primary selection
 e             - change excluded selection (shown even with the clipping plane)
 
 The selections only work if you have loaded a psf/dcd combination
-'''
+''')
 
 run_trj = False
 draw_axes = True
@@ -362,14 +365,14 @@ def keyfunc_mol(mol, shadowmap):
             mol.read_previous_frame()
             glutPostRedisplay()
         elif k == "j":
-            print "Current frame %d, Total frames %d, select frame:"%(mol.universe.dcd.ts.frame, mol.universe.dcd.numframes)
-            selection = raw_input("> ")
+            print(("Current frame %d, Total frames %d, select frame:"%(mol.universe.dcd.ts.frame, mol.universe.dcd.numframes)))
+            selection = input("> ")
             try:
                 frameno = int(selection)
                 mol.universe.dcd[frameno]
                 glutPostRedisplay()
             except:
-                print "Invalid frame"
+                print( "Invalid frame")
         elif k == "+":
             mol.averaging += 1
         elif k == "-":
@@ -403,30 +406,30 @@ def keyfunc_mol(mol, shadowmap):
         elif k == "m":
             makeMovie(mol)
         elif k == "k":
-            print "Make selection for color change:"
-            selection = raw_input("> ")
+            print( "Make selection for color change:")
+            selection = input("> ")
             try:
                 sel = mol.universe.selectAtoms(selection)
                 idx = sel.indices()
-                print "input color:"
-                color = raw_input("> ")
+                print("input color:")
+                color = input("> ")
                 mol.colors[idx] = convert_color(int(color,0))
                 glutPostRedisplay()
             except:
-                print "Invalid selection"
+                print( "Invalid selection")
         elif k == "e":
-            print "Make selection for exclusion:"
-            selection = raw_input("> ")
+            print( "Make selection for exclusion:")
+            selection = input("> ")
             try:
                 sel = mol.universe.selectAtoms(selection)
                 mol.excl = sel.indices()
                 mol.ResetAO()
                 glutPostRedisplay()
             except:
-                print "Invalid selection"
+                print( "Invalid selection")
         elif k == "c":
-            print "Make new selection:"
-            selection = raw_input("> ")
+            print( "Make new selection:")
+            selection = input("> ")
             try:
                 mol.sel = mol.universe.selectAtoms(selection)
                 mol.pos = mol.sel.centerOfGeometry()
@@ -438,7 +441,7 @@ def keyfunc_mol(mol, shadowmap):
                 mol.ResetAO()
                 glutPostRedisplay()
             except:
-                print "Invalid selection"
+                print( "Invalid selection")
         elif k == "x":
             mol.orien *= 0
             v = numpy.sin(numpy.pi/4.)
@@ -463,7 +466,7 @@ def makeMovie(mol):
     import shutil
     path = tempfile.mkdtemp()
     path = "./movie"
-    print "Making movie"
+    print( "Making movie")
     try:
         # Start trajectory
         res = mainCanvas.GetHardRes()*2
@@ -501,7 +504,7 @@ def makeMovie(mol):
         j = 0
         for i in range(0,numframes, mol.universe.dcd.skip):
             mol.universe.dcd[i]
-            print "Saving snapshot %d of %d (frame %d)"%(i+1, numframes, mol.universe.dcd.ts.frame)
+            print(( "Saving snapshot %d of %d (frame %d)"%(i+1, numframes, mol.universe.dcd.ts.frame)))
             saveSnapshot(res, mol, path+"/img%06d"%(j))
             j += 1
 
@@ -523,16 +526,14 @@ def idlefunc_mol(mol):
     return idlefunc
 
 if __name__=="__main__":
-    
     # Get around a bug in GLUT on OS X
     cwd = os.getcwd()
     glutInit(sys.argv)
     os.chdir(cwd)
-    
     if len(sys.argv) != 4:
-        print "Usage: %s [prefix] [is_trj] [is_coarsegrain]"%sys.argv[0]
-        print "If viewing a trajectory, prefix should be the name of the psf/dcd combo without the extension"
-        print "otherwise the name of the pdb file"
+        print(( "Usage: %s [prefix] [is_trj] [is_coarsegrain]"%sys.argv[0]))
+        print( "If viewing a trajectory, prefix should be the name of the psf/dcd combo without the extension")
+        print( "otherwise the name of the pdb file")
         sys.exit(0)
 
     prefix = sys.argv[1]

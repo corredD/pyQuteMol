@@ -1,7 +1,7 @@
 from ctypes import *
 from ctypes.util import find_library
 
-from glew import *
+# from glew import *
 
 # XXX Don't know if this will work on windows or linux
 path = find_library('GLEW')

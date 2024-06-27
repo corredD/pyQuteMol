@@ -66,3 +66,8 @@ Usage::
 * *PREFIX*: Looks for ``PREFIX.pdb`` or ``PREFIX.psf PREFIX.dcd``.
 * *IS_TRJ*: 0: look for pdb; 1: look for psf/dcd combo
 * *IS_COARSEGRAIN*: 0: atomistic; 1: hacks for coarse grained structures
+
+
+pip install pillow
+pip install PyOpenGL
+pip install mdanalysis

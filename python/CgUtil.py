@@ -2,9 +2,9 @@ import numpy
 
 from OpenGL.GL import *
 from OpenGL import GLU
-import glew_wrap as glew
-from Canvas import moltextureCanvas
-import hardSettings
+from . import glew_wrap as glew
+from .Canvas import moltextureCanvas
+from . import hardSettings
 
 class CgUtil:
     MAXPOW = 15
@@ -67,8 +67,8 @@ class CgUtil:
         self.accurateShadowmapBuilding = False
         self.doingAlphaSnapshot = False
         self.shadersMade = False
-        self.loadedHalo = numpy.zeros(CgUtil.MAXPOW, numpy.bool)
-        self.idfHalo = numpy.zeros(CgUtil.MAXPOW, numpy.int)
+        self.loadedHalo = numpy.zeros(CgUtil.MAXPOW, bool)
+        self.idfHalo = numpy.zeros(CgUtil.MAXPOW, numpy.int32)
 
     def do_use_doubleshadow(self):
         return (self.P_double_shadows and self.can_use_doubleshadow())
@@ -341,8 +341,8 @@ MUL tmp.z, tmp.z, tmp2.x;  # again for smoother edges\n'''%(self.P_halo_str-1, 1
         else: return True
 
     def ResetHalo(self):
-        self.loadedHalo = numpy.zeros(CgUtil.MAXPOW, numpy.bool)
-        self.idfHalo = numpy.zeros(CgUtil.MAXPOW, numpy.int)+666
+        self.loadedHalo = numpy.zeros(CgUtil.MAXPOW, bool)
+        self.idfHalo = numpy.zeros(CgUtil.MAXPOW, numpy.int32)+666
 
     def setBallVertexProgram(self):
         vertex_prog = '''\
@@ -789,7 +789,7 @@ END\n'''%(nvidia_patch)
 
     def Save(self, filename):
         FORMAT="void CgUtil::Set(int K){\nif (K==0){\n P_light_base = %f ;\n P_lighting = %f ;\n P_phong = %f ;\n P_phong_size = %f ;\n P_col_atoms_sat = %f ;\n P_col_atoms_bri = %f ;\n P_texture = %f ;\n P_border_inside = %f ;\n P_border_outside = %f ;\n P_depth_full = %f ;\n P_sem_effect = %d ;\n P_halo_size = %f ;\n P_halo_col = %f ;\n P_halo_str = %f ;\n P_halo_aware = %f ;\n P_fog = %f ;\n P_capping = %d ;\n P_shadowstrenght = %f ;\n P_bg_color_R = %f ;\n P_bg_color_G = %f ;\n P_bg_color_B = %f ;\n auto_normalize = %d ;\n P_double_shadows = %d ;\n P_border_fixed = %d ;\n}\n}"
-        print FORMAT%(self.P_light_base,self.P_lighting,self.P_phong,self.P_phong_size,self.P_col_atoms_sat,self.P_col_atoms_bri,self.P_texture,self.P_border_inside,self.P_border_outside,self.P_depth_full,self.P_sem_effect,self.P_halo_size,self.P_halo_col,self.P_halo_str,self.P_halo_aware,self.P_fog,self.P_capping,self.P_shadowstrenght,self.P_bg_color_R,self.P_bg_color_G,self.P_bg_color_B,self.auto_normalize,self.P_double_shadows,self.P_border_fixed)
+        print(( FORMAT%(self.P_light_base,self.P_lighting,self.P_phong,self.P_phong_size,self.P_col_atoms_sat,self.P_col_atoms_bri,self.P_texture,self.P_border_inside,self.P_border_outside,self.P_depth_full,self.P_sem_effect,self.P_halo_size,self.P_halo_col,self.P_halo_str,self.P_halo_aware,self.P_fog,self.P_capping,self.P_shadowstrenght,self.P_bg_color_R,self.P_bg_color_G,self.P_bg_color_B,self.auto_normalize,self.P_double_shadows,self.P_border_fixed)))
 
 def _checkProgramError(prog):
     res = True
@@ -798,28 +798,28 @@ def _checkProgramError(prog):
         if (error == glew.GL_NO_ERROR): return res
         res = False
         if (error == glew.GL_INVALID_OPERATION):
-            print prog
+            print( prog)
             errPos = glGetIntegerv(glew.GL_PROGRAM_ERROR_POSITION_ARB)
             errString = glGetString(glew.GL_PROGRAM_ERROR_STRING_ARB)
-            print "error at position: %d\n[%s]"%(errPos,errString)
-            print "\n\"..."
+            print(( "error at position: %d\n[%s]"%(errPos,errString)))
+            print( "\n\"...")
             for i in range(errPos-40,errPos+40):
                 if (i >= 0):
                     if not prog[i]: break
-                    if (i == errPos): print "(*)"
-                    if (prog[i]=='\n'): print '\\'
-                    else: print prog[i]
-            print "...\"\n"
+                    if (i == errPos): print ("(*)")
+                    if (prog[i]=='\n'): print( '\\')
+                    else: print(( prog[i]))
+            print( "...\"\n")
         else:
             errString = GLU.gluErrorString(error)
-            print "error: [%s]"%errString
+            print(( "error: [%s]"%errString))
 
 def __showShaderInfo(fp):
     size = 10
-    i = numpy.zeros(size, numpy.int)
-    j = numpy.zeros(size, numpy.int)
-    k = numpy.zeros(size, numpy.int)
-    h = numpy.zeros(size, numpy.int)
+    i = numpy.zeros(size, numpy.int32)
+    j = numpy.zeros(size, numpy.int32)
+    k = numpy.zeros(size, numpy.int32)
+    h = numpy.zeros(size, numpy.int32)
 
     glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_INSTRUCTIONS_ARB,     i)
     glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB, i+1)
@@ -856,11 +856,11 @@ def __showShaderInfo(fp):
     st = ["Instr","Alu Instr","Tex Instr","Tex Indir","Temp","Param","Attr"]
     if (fp==glew.GL_FRAGMENT_PROGRAM_ARB): outst = "FRAGMENT"
     else: outst = "VERTEX"
-    print "            %s PROGRAM STATS       "%outst
-    print "              original    |  native         "
-    print "            MAX   current |    MAX   current"
+    print(( "            %s PROGRAM STATS       "%outst))
+    print( "              original    |  native         ")
+    print( "            MAX   current |    MAX   current")
     for c in range(7):
-        print "%10s   %5d %5d  |  %5d %5d"%(st[c],i[c],j[c],h[c],k[c])
-    print "\n"
+        print(( "%10s   %5d %5d  |  %5d %5d"%(st[c],i[c],j[c],h[c],k[c])))
+    print( "\n")
 
 cgSettings = CgUtil()

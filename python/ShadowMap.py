@@ -1,11 +1,11 @@
 import numpy
-import hardSettings
-from Canvas import *
+from . import hardSettings
+from .Canvas import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-import glew_wrap as glew
-from CgUtil import CgUtil
-from trackball import glTrackball
+from . import glew_wrap as glew
+from .CgUtil import CgUtil
+from .trackball import glTrackball
 
 def validView(p):
     if not (hardSettings.doubleSM): return True
@@ -86,7 +86,7 @@ def restoreMatrices():
     glPopMatrix()
     glViewport(lastviewport[0],lastviewport[1],lastviewport[2],lastviewport[3])
 
-lastviewport = numpy.zeros(4, numpy.int) 
+lastviewport = numpy.zeros(4, numpy.int32) 
 matSM = numpy.zeros((4,4), numpy.float32) # matrix used during shadowmmap drawing
 matFinal = numpy.zeros((4,4), numpy.float32) # matrix for FP computation  = matSM x (MV)^(-1)
 

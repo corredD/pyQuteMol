@@ -2,18 +2,18 @@
 import numpy
 import random
 from OpenGL.GL import *
-import glew_wrap as glew
-from Canvas import moltextureCanvas, haloCanvas
-from OctaMap import octamap
-from trackball import glTrackball
-from quaternion import quaternion
-from CgUtil import cgSettings
-import hardSettings
-import ShadowMap
-from ShadowMap import AOgpu2
+from . import glew_wrap as glew
+from .Canvas import moltextureCanvas, haloCanvas
+from .OctaMap import octamap
+from .trackball import glTrackball
+from .quaternion import quaternion
+from .CgUtil import cgSettings
+from . import hardSettings
+from . import ShadowMap
+from .ShadowMap import AOgpu2
 import struct
 from MDAnalysis import *
-import molGL
+from . import molGL
 
 TOO_BIG = 0
 TOO_SMALL = 1
@@ -189,7 +189,7 @@ class Molecule:
         self.ResetAO()
     def load_trj(self,prefix):
         universe = AtomGroup.Universe(prefix+".psf", prefix+".dcd")
-        print "Finished loading psf"
+        print( "Finished loading psf")
         self.universe = universe
 
         #self.atompos = numpy.asarray(universe.dcd.ts._pos).T
@@ -199,7 +199,7 @@ class Molecule:
         self.idx = self.sel.atoms.indices()
 
         self.numatoms = universe.atoms.numberOfAtoms()
-        print "Finished selection"
+        print( "Finished selection")
 
         radii = [getAtomRadius(a.name, self.coarse_grain) for a in universe.atoms]
         colors = [getAtomColor(a.name) for a in universe.atoms]

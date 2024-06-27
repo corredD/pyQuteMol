@@ -1,5 +1,5 @@
 import math
-from quaternion import *
+from .quaternion import *
 
 __doc__ = '''A module which implements a trackball class.'''
 
@@ -58,19 +58,19 @@ class Trackball:
                  (P2[0]*P1[1]) - (P2[1]*P1[0])]
             
             # Figure out how much to rotate around that axis.
-            d = map(lambda x, y: x - y, P1, P2)
+            d = list(map(lambda x, y: x - y, P1, P2))
             t = math.sqrt(d[0]**2 + d[1]**2 + d[2]**2) / (2.0 * self.size)
 
             # Avoid problems with out-of-control values...
             t = max(min(t, 1.0), -1.0)
 
             scale = t*math.sqrt(a[0]**2 + a[1]**2 + a[2]**2)
-            q = map(lambda x, y: x*y, a, [scale]*3) + [math.sqrt(1.0-t**2)]
+            q = list(map(lambda x, y: x*y, a, [scale]*3)) + [math.sqrt(1.0-t**2)]
             self.quat = quaternion([q[3], q[0], q[1], q[2]]).normalized()
 
     def __getattr__(self, name):
         if name != 'matrix':
-            raise AttributeError, 'No attribute named "%s"' % name
+            raise AttributeError('No attribute named "%s"' % name)
         return self.quat.asMatrix()
 
     
