@@ -3,7 +3,10 @@ from . import hardSettings
 from .Canvas import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
-from . import glew_wrap as glew
+from OpenGL.GL.ARB.fragment_program import *
+from OpenGL.GL.ARB.vertex_program import *
+from OpenGL.GL.EXT.framebuffer_object import *
+
 from .CgUtil import CgUtil
 from .trackball import glTrackball
 
@@ -126,7 +129,7 @@ class ShadowMap:
             mainCanvas.SetAsOutput()
             lastL = L
 
-        glew.glActiveTextureARB(glew.GL_TEXTURE1_ARB)
+        glActiveTextureARB(GL_TEXTURE1_ARB)
         canvas.SetAsTexture()
 
     def init(self, winx):
@@ -160,7 +163,7 @@ class ShadowMap:
         glClear(GL_DEPTH_BUFFER_BIT)
         self.mol.Draw()
         mainCanvas.SetAsOutput()
-        glew.glActiveTextureARB(glew.GL_TEXTURE1_ARB)
+        glActiveTextureARB(GL_TEXTURE1_ARB)
         haloCanvas.SetAsTexture()
         glEnable(GL_TEXTURE_2D)
 
@@ -200,7 +203,7 @@ def GetCurrentPVMatrix():
 
 def FeedParameters():
     for i in range(3):
-        glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, i+3, 
+        glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, i+3, 
                 matFinal[0][i],matFinal[1][i],matFinal[2][i],matFinal[3][i])
 
 class AOgpu2:
@@ -211,19 +214,19 @@ class AOgpu2:
         shadowmap.computeAsTexture(dir, True, shadowAOCanvas)
         glFinish()
         moltextureCanvas.SetAsOutput()
-        glDisable(glew.GL_VERTEX_PROGRAM_ARB)
-        glEnable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glDisable(GL_VERTEX_PROGRAM_ARB)
+        glEnable(GL_FRAGMENT_PROGRAM_ARB)
         AOgpu2.aogpu_settings.BindDrawAOShader()
         for i in range(3):
-            glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, i,
+            glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, i,
                     matSM[0][i],matSM[1][i],matSM[2][i],matSM[3][i])
         
-        glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, 3, dir[0],dir[1],dir[2], 4.0/ndir )
-        #glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, 4, 0,stick_radius,0,0)
+        glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 3, dir[0],dir[1],dir[2], 4.0/ndir )
+        #glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 4, 0,stick_radius,0,0)
         global lastviewport
         lastviewport[:] = mol.DrawOnTexture()
         glDisable(GL_BLEND)
-        glEnable(glew.GL_VERTEX_PROGRAM_ARB)
+        glEnable(GL_VERTEX_PROGRAM_ARB)
 
     #static functions
     @staticmethod

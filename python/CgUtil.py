@@ -2,7 +2,9 @@ import numpy
 
 from OpenGL.GL import *
 from OpenGL import GLU
-from . import glew_wrap as glew
+from OpenGL.GL.ARB.fragment_program import *
+from OpenGL.GL.ARB.vertex_program import *
+
 from .Canvas import moltextureCanvas
 from . import hardSettings
 

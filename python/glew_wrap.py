@@ -1,14 +1,25 @@
 from ctypes import *
 from ctypes.util import find_library
+import sys
+import os
+from OpenGL.GL.ARB.fragment_program import *
+from OpenGL.GL.ARB.vertex_program import *
+from OpenGL.raw.GL.ARB.vertex_program import * 
+from OpenGL.raw.GL.ARB.fragment_program import * 
 
+lib='GLEW'
+if sys.platform == 'win32':
+    os.environ['PATH'] = "C:\\Windows\\SysWOW64\\" + ';' + os.environ['PATH']
+    lib='glew32'
 # from glew import *
+# all of that is in pyOpenGL
 
 # XXX Don't know if this will work on windows or linux
-path = find_library('GLEW')
+path = find_library(lib)
 gl = cdll.LoadLibrary(path)
 
 glewInit = gl.glewInit
-_glGenProgramsARB = gl.glGenProgramsARB
+_glGenProgramsARB = glGenProgramsARB
 _glGenProgramsARB.argtypes = [c_int, POINTER(c_ulong)]
 glBindProgramARB = gl.glBindProgramARB
 glBindProgramARB.argtypes = [c_int, c_ulong]

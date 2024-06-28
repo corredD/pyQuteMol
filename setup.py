@@ -4,13 +4,19 @@ Script for building the example.
 Usage:
     python setup.py build --build-lib=./
 """
+import os
 import sys
 from setuptools import setup, Extension
 from Cython.Build import cythonize
 import numpy
-
+include_dirs = [numpy.get_include()]
 # Determine the extra link arguments based on the platform
-if sys.platform == 'darwin':
+if sys.platform == 'win32':
+    include_dirs.append(os.path.join(os.environ['ProgramFiles(x86)'], 'Windows Kits', '10', 'Include', '10.0.19041.0', 'um'))
+    include_dirs.append(os.path.join(os.environ['ProgramFiles(x86)'], 'Windows Kits', '10', 'Include', '10.0.19041.0', 'shared'))
+    libraries = ["opengl32", "glu32", "glew32"]
+    extra_link_args = []
+elif sys.platform == 'darwin':
     extra_link_args = ["-framework", "OpenGL"]
     libraries = []
 elif sys.platform.startswith('linux'):
@@ -26,7 +32,7 @@ extensions = [
               # ["src/molGL.c"],
               ["src/molGL.pyx"],
               libraries = libraries,
-              include_dirs = [numpy.get_include()],
+              include_dirs = include_dirs,
               extra_link_args=extra_link_args
               )
     ]

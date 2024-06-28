@@ -15,8 +15,15 @@ cdef extern from "numpy/arrayobject.h":
 ctypedef unsigned int GLenum
 ctypedef float GLfloat
 
+cdef extern from "windows.h":
+    pass
+    
 cdef extern from "myrand.h":
     float myrand()
+
+cdef extern from "GL/glew.h":
+    void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
+    void glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat u, GLfloat v)
 
 cdef extern from "GL/gl.h":
     void glVertex2f(GLfloat x, GLfloat y)
@@ -25,9 +32,6 @@ cdef extern from "GL/gl.h":
     void glTexCoord2f(GLfloat s, GLfloat t)
     void glColor3f(GLfloat r, GLfloat g, GLfloat b)
 
-cdef extern from "GL/glext.h":
-    void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
-    void glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat u, GLfloat v)
 
 GL_TEXTURE0_ARB = 0x84C0
 GL_TEXTURE1_ARB = 0x84C1

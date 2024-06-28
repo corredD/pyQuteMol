@@ -2,7 +2,10 @@
 import numpy
 import random
 from OpenGL.GL import *
-from . import glew_wrap as glew
+from OpenGL.GL.ARB.fragment_program import *
+from OpenGL.GL.ARB.vertex_program import *
+from OpenGL.GL.ARB.multitexture import *
+
 from .Canvas import moltextureCanvas, haloCanvas
 from .OctaMap import octamap
 from .trackball import glTrackball
@@ -109,7 +112,7 @@ class Atom:
         Xp = 1.0+1.0/CSIZE
         Ym=Xm
         Yp=Xp
-        glew.glMultiTexCoord4fARB(glew.GL_TEXTURE1_ARB, px,py,pz,r)
+        glMultiTexCoord4fARB(GL_TEXTURE1_ARB, px,py,pz,r)
         glTexCoord2f(Xm,Ym); glVertex2f(-h+self.tx,      -h+self.ty)
         glTexCoord2f(Xp,Ym); glVertex2f(-h+self.tx+CSIZE,-h+self.ty)
         glTexCoord2f(Xp,Yp); glVertex2f(-h+self.tx+CSIZE,-h+self.ty+CSIZE)
@@ -131,7 +134,7 @@ class Atom:
         #px, py, pz = self.pos[self.id]
         #if ((!geoSettings.showHetatm)&&(hetatomFlag)) return
         s=cgSettings.P_halo_size * 2.5
-        glew.glMultiTexCoord2fARB(glew.GL_TEXTURE1_ARB, r+s, (r+s)*(r+s) / (s*s+2*r*s))
+        glMultiTexCoord2fARB(GL_TEXTURE1_ARB, r+s, (r+s)*(r+s) / (s*s+2*r*s))
         glTexCoord2f(+1,+1)
         glVertex3f(px,py,pz)
         glTexCoord2f(-1,+1)
@@ -309,8 +312,8 @@ class Molecule:
         glMultMatrixd((glTrackball.quat * self.orien).asRotation())
         glTranslatef(-px, -py, -pz)
 
-        glDisable(glew.GL_VERTEX_PROGRAM_ARB)
-        glDisable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glDisable(GL_VERTEX_PROGRAM_ARB)
+        glDisable(GL_FRAGMENT_PROGRAM_ARB)
         
         glBegin(GL_LINES)
         molGL.molDrawSticks(self.atompos, self.bonds, self.colors, self.clipplane)
@@ -329,12 +332,12 @@ class Molecule:
 
         x = glGetFloatv(GL_MODELVIEW_MATRIX)
         scalef = extractCurrentScaleFactor_x(x)
-        glew.glProgramEnvParameter4fARB(glew.GL_VERTEX_PROGRAM_ARB,0,scalef,0,0,0)
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB,0,scalef,0,0,0)
 
-        glEnable(glew.GL_VERTEX_PROGRAM_ARB)
-        glEnable(glew.GL_TEXTURE_2D)
+        glEnable(GL_VERTEX_PROGRAM_ARB)
+        glEnable(GL_TEXTURE_2D)
 
-        glew.glActiveTextureARB(glew.GL_TEXTURE0_ARB)
+        glActiveTextureARB(GL_TEXTURE0_ARB)
         moltextureCanvas.SetAsTexture()
 
         if cgSettings.P_shadowstrenght>0:
@@ -342,21 +345,21 @@ class Molecule:
             ShadowMap.FeedParameters()
 
         for i in range(3):
-            glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, i, 
+            glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, i, 
                     x[i][0],x[i][1],x[i][2],0)
-        glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, 6,
+        glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 6,
             self.PredictAO(),0,0,0)
 
-        glEnable(glew.GL_VERTEX_PROGRAM_ARB)
-        glEnable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glEnable(GL_VERTEX_PROGRAM_ARB)
+        glEnable(GL_FRAGMENT_PROGRAM_ARB)
 
         glBegin(GL_QUADS)
         molGL.MolDraw(self.atompos, self.radii, self.textures/moltextureCanvas.GetHardRes(), self.colors, self.clipplane, self.excl, self.idx)
         glEnd()
         #glDrawArrays(GL_QUADS, 0, self.numatoms)
 
-        glDisable(glew.GL_VERTEX_PROGRAM_ARB)
-        glDisable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glDisable(GL_VERTEX_PROGRAM_ARB)
+        glDisable(GL_FRAGMENT_PROGRAM_ARB)
 
         # Draw wireframe for clipplane
         if not numpy.allclose(self.clipplane, 0):
@@ -382,14 +385,14 @@ class Molecule:
         #glClipPlane(GL_CLIP_PLANE0, self.clipplane)
 
         scalef=extractCurrentScaleFactor()
-        glew.glProgramEnvParameter4fARB(glew.GL_VERTEX_PROGRAM_ARB, 0, scalef,0,0,0)
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0, scalef,0,0,0)
 
-        glEnable(glew.GL_VERTEX_PROGRAM_ARB)
-        glEnable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glEnable(GL_VERTEX_PROGRAM_ARB)
+        glEnable(GL_FRAGMENT_PROGRAM_ARB)
 
-        glew.glActiveTextureARB(glew.GL_TEXTURE0_ARB)
+        glActiveTextureARB(GL_TEXTURE0_ARB)
         glDisable(GL_TEXTURE_2D)
-        glew.glActiveTextureARB(glew.GL_TEXTURE1_ARB)
+        glActiveTextureARB(GL_TEXTURE1_ARB)
         glDisable(GL_TEXTURE_2D)
 
         shadowSettings.BindShaders()
@@ -423,10 +426,10 @@ class Molecule:
 
         x = glGetFloatv(GL_MODELVIEW_MATRIX)
         scalef = extractCurrentScaleFactor_x(x)
-        glew.glProgramEnvParameter4fARB(glew.GL_VERTEX_PROGRAM_ARB, 0,scalef, 0,0,0)
+        glProgramEnvParameter4fARB(GL_VERTEX_PROGRAM_ARB, 0,scalef, 0,0,0)
 
-        glEnable(glew.GL_VERTEX_PROGRAM_ARB)
-        glEnable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glEnable(GL_VERTEX_PROGRAM_ARB)
+        glEnable(GL_FRAGMENT_PROGRAM_ARB)
 
         glDepthMask(False)
         glEnable(GL_BLEND)
@@ -436,7 +439,7 @@ class Molecule:
 
         cgSettings.BindHaloShader( haloCanvas.getResPow2() )
 
-        glew.glProgramEnvParameter4fARB(glew.GL_FRAGMENT_PROGRAM_ARB, 0,
+        glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 0,
           (100.0+cgSettings.P_halo_aware*1300.0)/scalef/r, 0,0,0)
 
         glBegin(GL_QUADS)
@@ -449,8 +452,8 @@ class Molecule:
         glDepthMask(True)
 
         glPopMatrix()
-        glDisable(glew.GL_VERTEX_PROGRAM_ARB)
-        glDisable(glew.GL_FRAGMENT_PROGRAM_ARB)
+        glDisable(GL_VERTEX_PROGRAM_ARB)
+        glDisable(GL_FRAGMENT_PROGRAM_ARB)
 
     def DrawOnTexture(self):
         glEnable(GL_BLEND)
@@ -467,9 +470,9 @@ class Molecule:
         lastviewport = glGetIntegerv(GL_VIEWPORT)
         glViewport(0,0,moltextureCanvas.GetSoftRes(),moltextureCanvas.GetSoftRes())
 
-        glew.glActiveTextureARB(glew.GL_TEXTURE1_ARB)
+        glActiveTextureARB(GL_TEXTURE1_ARB)
         glDisable(GL_TEXTURE_2D)
-        glew.glActiveTextureARB(glew.GL_TEXTURE0_ARB)
+        glActiveTextureARB(GL_TEXTURE0_ARB)
         glDisable(GL_TEXTURE_2D)
 
         glBegin(GL_QUADS)
