@@ -70,6 +70,11 @@ class quaternion:
             raise ValueError('Division by quaternions is not allowed.')
         return quaternion(self.array/other)
 
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return quaternion(self.array / other)
+        raise TypeError(f"Unsupported operand type(s) for /: 'quaternion' and '{type(other).__name__}'")
+
     def __rdiv__(self, other):
         raise ValueError('Division by quaternions is not allowed.')
 

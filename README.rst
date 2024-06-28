@@ -69,5 +69,6 @@ Usage::
 
 
 pip install pillow
+pip install cython
 pip install PyOpenGL
 pip install mdanalysis

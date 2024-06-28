@@ -5,6 +5,7 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GL.ARB.fragment_program import *
 from OpenGL.GL.ARB.vertex_program import *
+from OpenGL.GL.ARB.multitexture import *
 from OpenGL.GL.EXT.framebuffer_object import *
 
 from .CgUtil import CgUtil
@@ -220,7 +221,7 @@ class AOgpu2:
         for i in range(3):
             glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, i,
                     matSM[0][i],matSM[1][i],matSM[2][i],matSM[3][i])
-        
+
         glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 3, dir[0],dir[1],dir[2], 4.0/ndir )
         #glProgramEnvParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, 4, 0,stick_radius,0,0)
         global lastviewport
@@ -299,14 +300,15 @@ class OctaLevel:
 
             for i in range(self.sz):
                 for j in range(self.sz):
-                    if ((i%2) == 0 and (j%2) == 0):
-                        self.v[i,j] = tmp.v[i/2,j/2]
-                    if ((i%2) != 0 and (j%2) == 0):
-                        self.v[i,j] = (tmp.v[i/2+0,j/2]+tmp.v[i/2+1,j/2])/2.0
-                    if ((i%2) == 0 and (j%2) != 0):
-                        self.v[i,j] = (tmp.v[i/2,j/2+0]+tmp.v[i/2,j/2+1])/2.0
-                    if ((i%2) != 0 and (j%2) != 0):
-                        self.v[i,j]=(tmp.v[i/2+0,j/2+0]+tmp.v[i/2+0,j/2+1]+tmp.v[i/2+1,j/2+0]+tmp.v[i/2+1,j/2+1])/4.0
+                    if ((i % 2) == 0 and (j % 2) == 0):
+                        self.v[i, j] = tmp.v[int(i / 2), int(j / 2)]
+                    if ((i % 2) != 0 and (j % 2) == 0):
+                        self.v[i, j] = (tmp.v[int(i / 2) + 0, int(j / 2)] + tmp.v[int(i / 2) + 1, int(j / 2)]) / 2.0
+                    if ((i % 2) == 0 and (j % 2) != 0):
+                        self.v[i, j] = (tmp.v[int(i / 2), int(j / 2) + 0] + tmp.v[int(i / 2), int(j / 2) + 1]) / 2.0
+                    if ((i % 2) != 0 and (j % 2) != 0):
+                        self.v[i, j] = (tmp.v[int(i / 2) + 0, int(j / 2) + 0] + tmp.v[int(i / 2) + 0, int(j / 2) + 1] + tmp.v[int(i / 2) + 1, int(j / 2) + 0] + tmp.v[int(i / 2) + 1, int(j / 2) + 1]) / 4.0
+
             tmp.v.shape = (tmp.sz**2, 3)
             #self.v.shape = (self.sz**2, 3)
             for r in self.v:

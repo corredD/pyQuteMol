@@ -1,7 +1,9 @@
 
 import numpy
 from OpenGL import GL
+from OpenGL.GL import *
 from OpenGL.GL.EXT.framebuffer_object import *
+from OpenGL import error
 from . import hardSettings
 
 class Canvas:
@@ -82,7 +84,7 @@ class Canvas:
             if depth: code1=tryme[i]; code2=GL.GL_DEPTH_COMPONENT; code3=GL.GL_UNSIGNED_INT
             else: code1 = GL.GL_RGBA8; code2=GL.GL_RGBA; code3=GL.GL_UNSIGNED_BYTE
             glTexImage2D(GL.GL_TEXTURE_2D, 0, code1,
-                screensizex, screensizey, 0, code2, code3, 0)
+                screensizex, screensizey, 0, code2, code3, None )
             GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR)
             GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR)
             GL.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_CLAMP_TO_EDGE)

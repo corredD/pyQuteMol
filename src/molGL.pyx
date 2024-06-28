@@ -1,9 +1,7 @@
-cdef extern from "Python.h":
-    ctypedef int Py_intptr_t
 
-cdef extern from "windows.h"
-    pass
-    
+cdef extern from "Python.h":
+        ctypedef int Py_intptr_t
+
 cdef extern from "numpy/arrayobject.h":
     ctypedef class numpy.ndarray [object PyArrayObject]:
         cdef char *data
@@ -18,13 +16,16 @@ cdef extern from "numpy/arrayobject.h":
 ctypedef unsigned int GLenum
 ctypedef float GLfloat
 
-cdef extern from "windows.h":
-    pass
-    
 cdef extern from "myrand.h":
     float myrand()
 
+cdef extern from "windows.h":
+    pass
+
 cdef extern from "GL/glew.h":
+    GLenum glewInit()
+    const char* glewGetErrorString(GLenum err)
+    int glewExperimental
     void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
     void glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat u, GLfloat v)
 
@@ -39,126 +40,36 @@ cdef extern from "GL/gl.h":
 GL_TEXTURE0_ARB = 0x84C0
 GL_TEXTURE1_ARB = 0x84C1
 
-import numpy as np
-cimport numpy as np
-from libc.math cimport pow
-from libc.stdlib cimport malloc, free
-from libc.string cimport memset
+import numpy
 
-# Exception messages
-cdef char *conf_error_msg = b"conf must be a sequence of 3 dimensional coordinates"
+def initialize_glew():
+    """
+    Initialize GLEW and return a status message.
+    """
+    global glewExperimental
+    glewExperimental = 1  # Needed for core profile
+    cdef GLenum err = glewInit()
+    if err != 0:
+        raise RuntimeError("Error initializing GLEW: %s" % glewGetErrorString(err))
+    print("GLEW initialized successfully")
 
-# Utility functions
-cdef inline void raise_conf_error():
-    raise ValueError(conf_error_msg.decode())
-
-# Function prototypes
-def MolDraw(np.ndarray[np.float32_t, ndim=2] coords,
-            np.ndarray[np.float32_t, ndim=1] radii,
-            np.ndarray[np.float32_t, ndim=2] textures,
-            np.ndarray[np.float32_t, ndim=2] colors,
-            np.ndarray[np.float32_t, ndim=1] clipplane,
-            np.ndarray[np.int32_t, ndim=1] exclude,
-            np.ndarray[np.int32_t, ndim=1] indices):
-    cdef int i, index, numindices, numexclude, stride1, stride2, noindices, clipping
-    cdef float x, y, z, r
+def MolDraw(ndarray coords, ndarray radii, ndarray textures, ndarray colors, ndarray clipplane, ndarray exclude, ndarray indices = None):
+    cdef int i, index, numindices, numexclude
+    cdef int stride1, stride2
+    cdef int *idx, *excl
+    
+    cdef int clipping
     cdef float *vert, *rad, *col, *tex, *clip
-    cdef int *idx, *excl
-
-    vert = <float *> coords.data
-    col = <float *> colors.data
-    rad = <float *> radii.data
-    tex = <float *> textures.data
-
-    if coords.ndim != 2:
-        raise_conf_error()
-
-    if coords.shape[1] == 3:
-        stride1 = coords.strides[0] // sizeof(float)
-        stride2 = coords.strides[1] // sizeof(float)
-    else:
-        stride1 = coords.strides[1] // sizeof(float)
-        stride2 = coords.strides[0] // sizeof(float)
-
-    if indices is None:
-        if coords.shape[1] == 3:
-            numindices = coords.shape[0]
-        else:
-            numindices = coords.shape[1]
-        noindices = 0
-    else:
-        numindices = indices.shape[0]
-        idx = <int *> indices.data
-        noindices = 1
-
-    if not np.allclose(clipplane, 0):
-        clipping = 1
-        clip = <float *> clipplane.data
-        excl = <int *> exclude.data
-        numexclude = exclude.shape[0]
-    else:
-        clipping = 0
-
-    for i in range(numindices):
-        if noindices == 0:
-            index = i
-        else:
-            index = idx[i]
-
-        x = vert[(index * stride1) + (stride2 * 0)]
-        y = vert[(index * stride1) + (stride2 * 1)]
-        z = vert[(index * stride1) + (stride2 * 2)]
-        r = rad[index]
-
-        if clipping == 1 and (x * clip[0] + y * clip[1] + z * clip[2] + clip[3]) < 0:
-            continue
-
-        glColor3f(col[(index * 3) + 0], col[(index * 3) + 1], col[(index * 3) + 2])
-        glTexCoord2f(tex[(index * 2) + 0], tex[(index * 2) + 1])
-        glNormal3f(1, 1, r)
-        glVertex3f(x, y, z)
-        glNormal3f(-1, 1, r)
-        glVertex3f(x, y, z)
-        glNormal3f(-1, -1, r)
-        glVertex3f(x, y, z)
-        glNormal3f(1, -1, r)
-        glVertex3f(x, y, z)
-
-    if clipping == 1:
-        for i in range(numexclude):
-            index = excl[i]
-            x = vert[(index * stride1) + (stride2 * 0)]
-            y = vert[(index * stride1) + (stride2 * 1)]
-            z = vert[(index * stride1) + (stride2 * 2)]
-            r = rad[index]
-            glColor3f(col[(index * 3) + 0], col[(index * 3) + 1], col[(index * 3) + 2])
-            glTexCoord2f(tex[(index * 2) + 0], tex[(index * 2) + 1])
-            glNormal3f(1, 1, r)
-            glVertex3f(x, y, z)
-            glNormal3f(-1, 1, r)
-            glVertex3f(x, y, z)
-            glNormal3f(-1, -1, r)
-            glVertex3f(x, y, z)
-            glNormal3f(1, -1, r)
-            glVertex3f(x, y, z)
-
-def MolDrawShadow(np.ndarray[np.float32_t, ndim=2] coords,
-                  np.ndarray[np.float32_t, ndim=1] radii,
-                  np.ndarray[np.float32_t, ndim=1] clipplane,
-                  np.ndarray[np.int32_t, ndim=1] exclude,
-                  np.ndarray[np.int32_t, ndim=1] indices):
-    cdef int i, index, numindices, numexclude, stride1, stride2, noindices, clipping
     cdef float x, y, z, r
-    cdef float *vert, *rad, *clip
-    cdef int *idx, *excl
+    cdef int noindices
+    vert = <float*>(coords.data)
+    col = <float*>(colors.data)
+    rad = <float*>(radii.data)
+    tex = <float*>(textures.data)
 
-    vert = <float *> coords.data
-    rad = <float *> radii.data
-
-    if coords.ndim != 2:
-        raise_conf_error()
-
-    if coords.shape[1] == 3:
+    if coords.nd != 2:
+        raise Exception("conf must be a sequence of 3 dimensional coordinates")
+    if coords.dimensions[1] == 3:
         stride1 = coords.strides[0] // sizeof(float)
         stride2 = coords.strides[1] // sizeof(float)
     else:
@@ -166,79 +77,140 @@ def MolDrawShadow(np.ndarray[np.float32_t, ndim=2] coords,
         stride2 = coords.strides[0] // sizeof(float)
 
     if indices is None:
-        numindices = coords.shape[0]
+        if coords.dimensions[1] == 3: numindices = coords.dimensions[0]
+        else: numindices = coords.dimensions[1]
         noindices = 0
     else:
-        numindices = indices.shape[0]
-        idx = <int *> indices.data
+        numindices = len(indices)
+        idx = <int*>(indices.data)
         noindices = 1
 
-    if not np.allclose(clipplane, 0):
+    if not numpy.allclose(clipplane,0):
         clipping = 1
-        clip = <float *> clipplane.data
-        excl = <int *> exclude.data
-        numexclude = exclude.shape[0]
-    else:
-        clipping = 0
+        clip = <float*>(clipplane.data)
+        excl = <int*>(exclude.data)
+        numexclude = len(exclude)
+    else: clipping = 0
 
-    for i in range(numindices):
-        if noindices == 0:
-            index = i
-        else:
-            index = idx[i]
+    for i from 0<=i<numindices:
+        if noindices == 0: index = i
+        else: index = idx[i]
 
-        x = vert[(index * stride1) + (stride2 * 0)]
-        y = vert[(index * stride1) + (stride2 * 1)]
-        z = vert[(index * stride1) + (stride2 * 2)]
+        x = vert[index*stride1+stride2*0]
+        y = vert[index*stride1+stride2*1]
+        z = vert[index*stride1+stride2*2]
         r = rad[index]
-
-        if clipping == 1 and (x * clip[0] + y * clip[1] + z * clip[2] + clip[3]) < 0:
-            continue
-
-        glNormal3f(1, 1, r)
+        if clipping == 1 and (x*clip[0]+y*clip[1]+z*clip[2]+clip[3]) < 0: continue
+        glColor3f(col[index*3+0],col[index*3+1],col[index*3+2])
+        glTexCoord2f(tex[index*2+0], tex[index*2+1])
+        glNormal3f(+1,+1, r)
         glVertex3f(x, y, z)
-        glNormal3f(-1, 1, r)
+        glNormal3f(-1,+1, r)
         glVertex3f(x, y, z)
-        glNormal3f(-1, -1, r)
+        glNormal3f(-1,-1, r)
         glVertex3f(x, y, z)
-        glNormal3f(1, -1, r)
+        glNormal3f(+1,-1, r)
         glVertex3f(x, y, z)
-
+    # Draw those excluded from clipping
     if clipping == 1:
-        for i in range(numexclude):
+        for i from 0<=i<numexclude:
             index = excl[i]
-            x = vert[(index * stride1) + (stride2 * 0)]
-            y = vert[(index * stride1) + (stride2 * 1)]
-            z = vert[(index * stride1) + (stride2 * 2)]
+            x = vert[index*stride1+stride2*0]
+            y = vert[index*stride1+stride2*1]
+            z = vert[index*stride1+stride2*2]
             r = rad[index]
-            glNormal3f(1, 1, r)
+            glColor3f(col[index*3+0],col[index*3+1],col[index*3+2])
+            glTexCoord2f(tex[index*2+0], tex[index*2+1])
+            glNormal3f(+1,+1, r)
             glVertex3f(x, y, z)
-            glNormal3f(-1, 1, r)
+            glNormal3f(-1,+1, r)
             glVertex3f(x, y, z)
-            glNormal3f(-1, -1, r)
+            glNormal3f(-1,-1, r)
             glVertex3f(x, y, z)
-            glNormal3f(1, -1, r)
+            glNormal3f(+1,-1, r)
             glVertex3f(x, y, z)
 
-def MolDrawHalo(np.ndarray[np.float32_t, ndim=2] coords,
-                np.ndarray[np.float32_t, ndim=1] radii,
-                float halo_size,
-                np.ndarray[np.float32_t, ndim=1] clipplane,
-                np.ndarray[np.int32_t, ndim=1] exclude,
-                np.ndarray[np.int32_t, ndim=1] indices):
-    cdef int i, index, numindices, numexclude, stride1, stride2, noindices, clipping
-    cdef float x, y, z, r, s
-    cdef float *vert, *rad, *clip
+def MolDrawShadow(ndarray coords, ndarray radii, ndarray clipplane, ndarray exclude, ndarray indices = None):
+    cdef int i, index, numindices, numexclude, stride1, stride2
     cdef int *idx, *excl
+    cdef float *vert, *rad, *clip
+    cdef float x, y, z, r
+    cdef int noindices, clipping
+    vert = <float*>(coords.data)
+    rad = <float*>(radii.data)
 
-    vert = <float *> coords.data
-    rad = <float *> radii.data
+    if coords.nd != 2:
+        raise Exception("conf must be a sequence of 3 dimensional coordinates")
+    if coords.dimensions[1] == 3:
+        stride1 = coords.strides[0] // sizeof(float)
+        stride2 = coords.strides[1] // sizeof(float)
+    else:
+        stride1 = coords.strides[1] // sizeof(float)
+        stride2 = coords.strides[0] // sizeof(float)
+
+    if indices is None:
+        numindices = len(coords)
+        noindices = 0
+    else:
+        numindices = len(indices)
+        idx = <int*>(indices.data)
+        noindices = 1
+    
+    if not numpy.allclose(clipplane,0):
+        clipping = 1
+        clip = <float*>(clipplane.data)
+        excl = <int*>(exclude.data)
+        numexclude = len(exclude)
+    else: clipping = 0
+
+    for i from 0<=i<numindices:
+        if noindices == 0: index = i
+        else: index = idx[i]
+        x = vert[index*stride1+stride2*0]
+        y = vert[index*stride1+stride2*1]
+        z = vert[index*stride1+stride2*2]
+        r = rad[index]
+        if (clipping == 1) and (x*clip[0]+y*clip[1]+z*clip[2]+clip[3]) < 0: continue
+        glNormal3f(1,1,r)
+        glVertex3f(x, y, z)
+        glNormal3f(-1,+1, r)
+        glVertex3f(x, y, z)
+        glNormal3f(-1,-1, r)
+        glVertex3f(x, y, z)
+        glNormal3f(+1,-1, r)
+        glVertex3f(x, y, z)
+    # Draw those excluded from clipping
+    if clipping == 1:
+        for i from 0<=i<numexclude:
+            index = excl[i]
+            x = vert[index*stride1+stride2*0]
+            y = vert[index*stride1+stride2*1]
+            z = vert[index*stride1+stride2*2]
+            r = rad[index]
+            glNormal3f(+1,+1, r)
+            glVertex3f(x, y, z)
+            glNormal3f(-1,+1, r)
+            glVertex3f(x, y, z)
+            glNormal3f(-1,-1, r)
+            glVertex3f(x, y, z)
+            glNormal3f(+1,-1, r)
+            glVertex3f(x, y, z)
+
+def MolDrawHalo(ndarray coords, ndarray radii, float halo_size, ndarray clipplane, ndarray exclude, ndarray indices = None):
+    cdef int i, index, numindices, numexclude
+    cdef int stride1, stride2
+    cdef int *idx, *excl
+    cdef float *vert, *rad, *clip
+    cdef int noindices, clipping
+    cdef float r, s
+    
+    vert = <float*>(coords.data)
+    rad = <float*>(radii.data)
     s = halo_size * 2.5
-
-    if coords.ndim != 2:
-        raise_conf_error()
-
-    if coords.shape[1] == 3:
+    
+    if coords.nd != 2:
+        raise Exception("conf must be a sequence of 3 dimensional coordinates")
+    if coords.dimensions[1] == 3:
         stride1 = coords.strides[0] // sizeof(float)
         stride2 = coords.strides[1] // sizeof(float)
     else:
@@ -246,239 +218,181 @@ def MolDrawHalo(np.ndarray[np.float32_t, ndim=2] coords,
         stride2 = coords.strides[0] // sizeof(float)
 
     if indices is None:
-        if coords.shape[1] == 3:
-            numindices = coords.shape[0]
-        else:
-            numindices = coords.shape[1]
+        if coords.dimensions[1] == 3: numindices = coords.dimensions[0]
+        else: numindices = coords.dimensions[1]
         noindices = 0
     else:
-        numindices = indices.shape[0]
-        idx = <int *> indices.data
+        numindices = len(indices)
+        idx = <int*>(indices.data)
         noindices = 1
-
-    if not np.allclose(clipplane, 0):
+    
+    if not numpy.allclose(clipplane,0):
         clipping = 1
-        clip = <float *> clipplane.data
-        excl = <int *> exclude.data
-        numexclude = exclude.shape[0]
-    else:
-        clipping = 0
+        clip = <float*>(clipplane.data)
+        excl = <int*>(exclude.data)
+        numexclude = len(exclude)
+    else: clipping = 0
 
-    for i in range(numindices):
-        if noindices == 0:
-            index = i
-        else:
-            index = idx[i]
+    for i from 0<=i<numindices:
+        if noindices == 0: index = i
+        else: index = idx[i]
 
-        x = vert[(index * stride1) + (stride2 * 0)]
-        y = vert[(index * stride1) + (stride2 * 1)]
-        z = vert[(index * stride1) + (stride2 * 2)]
+        x = vert[index*stride1+stride2*0]
+        y = vert[index*stride1+stride2*1]
+        z = vert[index*stride1+stride2*2]
         r = rad[index]
+        if clipping == 1 and (x*clip[0]+y*clip[1]+z*clip[2]+clip[3]) < 0: continue
 
-        if clipping == 1 and (x * clip[0] + y * clip[1] + z * clip[2] + clip[3]) < 0:
-            continue
+        glMultiTexCoord2fARB(GL_TEXTURE1_ARB, r+s, (r+s)*(r+s) / (s*s+2*r*s))
 
-        glNormal3f(1, 1, r + s)
+        glTexCoord2f(+1,+1)
         glVertex3f(x, y, z)
-        glNormal3f(-1, 1, r + s)
+        glTexCoord2f(-1,+1)
         glVertex3f(x, y, z)
-        glNormal3f(-1, -1, r + s)
+        glTexCoord2f(-1,-1)
         glVertex3f(x, y, z)
-        glNormal3f(1, -1, r + s)
+        glTexCoord2f(+1,-1)
         glVertex3f(x, y, z)
-
+    # Draw those excluded from clipping
     if clipping == 1:
-        for i in range(numexclude):
+        for i from 0<=i<numexclude:
             index = excl[i]
-            x = vert[(index * stride1) + (stride2 * 0)]
-            y = vert[(index * stride1) + (stride2 * 1)]
-            z = vert[(index * stride1) + (stride2 * 2)]
+            x = vert[index*stride1+stride2*0]
+            y = vert[index*stride1+stride2*1]
+            z = vert[index*stride1+stride2*2]
             r = rad[index]
-            glNormal3f(1, 1, r + s)
+            glMultiTexCoord2fARB(GL_TEXTURE1_ARB, r+s, (r+s)*(r+s) / (s*s+2*r*s))
+
+            glTexCoord2f(+1,+1)
             glVertex3f(x, y, z)
-            glNormal3f(-1, 1, r + s)
+            glTexCoord2f(-1,+1)
             glVertex3f(x, y, z)
-            glNormal3f(-1, -1, r + s)
+            glTexCoord2f(-1,-1)
             glVertex3f(x, y, z)
-            glNormal3f(1, -1, r + s)
+            glTexCoord2f(+1,-1)
             glVertex3f(x, y, z)
 
-def MolDrawOnTexture(np.ndarray[np.float32_t, ndim=2] coords,
-                     np.ndarray[np.float32_t, ndim=1] radii,
-                     np.ndarray[np.float32_t, ndim=2] textures,
-                     np.ndarray[np.float32_t, ndim=2] colors,
-                     np.ndarray[np.float32_t, ndim=1] clipplane,
-                     np.ndarray[np.int32_t, ndim=1] exclude,
-                     np.ndarray[np.int32_t, ndim=1] indices):
-    cdef int i, index, numindices, numexclude, stride1, stride2, noindices, clipping
-    cdef float x, y, z, r
-    cdef float *vert, *rad, *col, *tex, *clip
-    cdef int *idx, *excl
+def MolDrawOnTexture(ndarray coords, ndarray radii, ndarray textures, int CSIZE, ndarray indices = None):
+    cdef int i, index, numindices
+    cdef int stride1, stride2
+    cdef int *idx
+    cdef float *vert, *rad, *tex
+    cdef int noindices
+    cdef float h, Xm, Xp, Ym, Yp, tx, ty
 
-    vert = <float *> coords.data
-    col = <float *> colors.data
-    rad = <float *> radii.data
-    tex = <float *> textures.data
+    vert = <float*>(coords.data)
+    rad = <float*>(radii.data)
+    tex = <float*>(textures.data)
 
-    if coords.ndim != 2:
-        raise_conf_error()
-
-    if coords.shape[1] == 3:
+    
+    if coords.nd != 2:
+        raise Exception("conf must be a sequence of 3 dimensional coordinates")
+    if coords.dimensions[1] == 3:
         stride1 = coords.strides[0] // sizeof(float)
         stride2 = coords.strides[1] // sizeof(float)
     else:
         stride1 = coords.strides[1] // sizeof(float)
         stride2 = coords.strides[0] // sizeof(float)
 
+    
     if indices is None:
-        if coords.shape[1] == 3:
-            numindices = coords.shape[0]
-        else:
-            numindices = coords.shape[1]
+        if coords.dimensions[1] == 3: numindices = coords.dimensions[0]
+        else: numindices = coords.dimensions[1]
         noindices = 0
     else:
-        numindices = indices.shape[0]
-        idx = <int *> indices.data
+        numindices = len(indices)
+        idx = <int*>(indices.data)
         noindices = 1
 
-    if not np.allclose(clipplane, 0):
-        clipping = 1
-        clip = <float *> clipplane.data
-        excl = <int *> exclude.data
-        numexclude = exclude.shape[0]
-    else:
-        clipping = 0
+    
+    h = 0
+    Xm = -1.0 - 1.0/CSIZE
+    Xp = 1.0 + 1.0/CSIZE
+    Ym = Xm
+    Yp = Xp
 
+    
     for i in range(numindices):
-        if noindices == 0:
-            index = i
-        else:
-            index = idx[i]
+        if noindices == 0: index = i
+        else: index = idx[i]
 
-        x = vert[(index * stride1) + (stride2 * 0)]
-        y = vert[(index * stride1) + (stride2 * 1)]
-        z = vert[(index * stride1) + (stride2 * 2)]
-        r = rad[index]
+        tx = tex[index*2+0]
+        ty = tex[index*2+1]
 
-        if clipping == 1 and (x * clip[0] + y * clip[1] + z * clip[2] + clip[3]) < 0:
-            continue
+        
+        glColor3f(myrand(), myrand(), myrand())
 
-        glColor3f(col[(index * 3) + 0], col[(index * 3) + 1], col[(index * 3) + 2])
-        glMultiTexCoord2fARB(GL_TEXTURE0_ARB, tex[(index * 2) + 0], tex[(index * 2) + 1])
-        glMultiTexCoord2fARB(GL_TEXTURE1_ARB, tex[(index * 2) + 0], tex[(index * 2) + 1])
-        glNormal3f(1, 1, r)
-        glVertex3f(x, y, z)
-        glNormal3f(-1, 1, r)
-        glVertex3f(x, y, z)
-        glNormal3f(-1, -1, r)
-        glVertex3f(x, y, z)
-        glNormal3f(1, -1, r)
-        glVertex3f(x, y, z)
+        
+        glMultiTexCoord4fARB(GL_TEXTURE1_ARB, vert[index*stride1+stride2*0],vert[index*stride1+stride2*1],vert[index*stride1+stride2*2], rad[index])
+    
+        glTexCoord2f(Xm, Ym)
+        glVertex2f(-h + tx, -h + ty)
+    
+        glTexCoord2f(Xp, Ym)
+        glVertex2f(-h + tx + CSIZE, -h + ty)
+    
+        glTexCoord2f(Xp, Yp)
+        glVertex2f(-h + tx + CSIZE, -h + ty + CSIZE)
+    
+        glTexCoord2f(Xm, Yp)
+        glVertex2f(-h + tx, -h + ty + CSIZE)
+    
 
-    if clipping == 1:
-        for i in range(numexclude):
-            index = excl[i]
-            x = vert[(index * stride1) + (stride2 * 0)]
-            y = vert[(index * stride1) + (stride2 * 1)]
-            z = vert[(index * stride1) + (stride2 * 2)]
-            r = rad[index]
-            glColor3f(col[(index * 3) + 0], col[(index * 3) + 1], col[(index * 3) + 2])
-            glMultiTexCoord2fARB(GL_TEXTURE0_ARB, tex[(index * 2) + 0], tex[(index * 2) + 1])
-            glMultiTexCoord2fARB(GL_TEXTURE1_ARB, tex[(index * 2) + 0], tex[(index * 2) + 1])
-            glNormal3f(1, 1, r)
-            glVertex3f(x, y, z)
-            glNormal3f(-1, 1, r)
-            glVertex3f(x, y, z)
-            glNormal3f(-1, -1, r)
-            glVertex3f(x, y, z)
-            glNormal3f(1, -1, r)
-            glVertex3f(x, y, z)
+def molDrawSticks(ndarray coords, ndarray bonds, ndarray colors, ndarray clipplane, ndarray indices = None):
+    cdef int i, index, nbonds, numindices, numexclude
+    cdef int stride1, stride2
+    cdef int *idx, *excl, *bnds
+    
+    cdef int clipping
+    cdef float *vert, *col, *clip
+    cdef float x, y, z
+    cdef int noindices
+    vert = <float*>(coords.data)
+    col = <float*>(colors.data)
+    bnds = <int*>(bonds.data)
 
-def molDrawSticks(np.ndarray[np.float32_t, ndim=2] coords,
-                  np.ndarray[np.float32_t, ndim=1] radii,
-                  np.ndarray[np.float32_t, ndim=2] colors,
-                  np.ndarray[np.float32_t, ndim=1] clipplane,
-                  np.ndarray[np.int32_t, ndim=1] exclude,
-                  np.ndarray[np.int32_t, ndim=1] indices):
-    cdef int i, j, index1, index2, numindices, numexclude, stride1, stride2, noindices, clipping
-    cdef float x1, y1, z1, r1
-    cdef float x2, y2, z2, r2
-    cdef float *vert, *rad, *col, *clip
-    cdef int *idx, *excl
-
-    vert = <float *> coords.data
-    col = <float *> colors.data
-    rad = <float *> radii.data
-
-    if coords.ndim != 2:
-        raise_conf_error()
-
-    if coords.shape[1] == 3:
+    if coords.nd != 2:
+        raise Exception("conf must be a sequence of 3 dimensional coordinates")
+    if coords.dimensions[1] == 3:
         stride1 = coords.strides[0] // sizeof(float)
         stride2 = coords.strides[1] // sizeof(float)
     else:
         stride1 = coords.strides[1] // sizeof(float)
         stride2 = coords.strides[0] // sizeof(float)
 
+    nbonds = len(bonds)
+
     if indices is None:
-        numindices = coords.shape[0] // 2
+        if coords.dimensions[1] == 3: numindices = coords.dimensions[0]
+        else: numindices = coords.dimensions[1]
         noindices = 0
     else:
-        numindices = indices.shape[0] // 2
-        idx = <int *> indices.data
+        numindices = len(indices)
+        idx = <int*>(indices.data)
         noindices = 1
 
-    if not np.allclose(clipplane, 0):
-        clipping = 1
-        clip = <float *> clipplane.data
-        excl = <int *> exclude.data
-        numexclude = exclude.shape[0]
-    else:
-        clipping = 0
+    #if not numpy.allclose(clipplane,0):
+    #    clipping = 1
+    #    clip = <float*>(clipplane.data)
+    #    excl = <int*>(exclude.data)
+    #    numexclude = len(exclude)
+    #else: clipping = 0
 
-    for i in range(numindices):
-        if noindices == 0:
-            index1 = 2 * i
-            index2 = 2 * i + 1
-        else:
-            index1 = idx[2 * i]
-            index2 = idx[2 * i + 1]
+    for i from 0<=i<nbonds:
+        #if noindices == 0: index = i
+        #else: index = idx[i]
 
-        x1 = vert[(index1 * stride1) + (stride2 * 0)]
-        y1 = vert[(index1 * stride1) + (stride2 * 1)]
-        z1 = vert[(index1 * stride1) + (stride2 * 2)]
-        r1 = rad[index1]
+        index = bnds[i*2+0]
+        x = vert[index*stride1+stride2*0]
+        y = vert[index*stride1+stride2*1]
+        z = vert[index*stride1+stride2*2]
+        #if clipping == 1 and (x*clip[0]+y*clip[1]+z*clip[2]+clip[3]) < 0: continue
+        glColor3f(col[index*3+0],col[index*3+1],col[index*3+2])
+        glVertex3f(x, y, z)
+        index = bnds[i*2+1]
+        x = vert[index*stride1+stride2*0]
+        y = vert[index*stride1+stride2*1]
+        z = vert[index*stride1+stride2*2]
+        glColor3f(col[index*3+0],col[index*3+1],col[index*3+2])
+        glVertex3f(x, y, z)
 
-        x2 = vert[(index2 * stride1) + (stride2 * 0)]
-        y2 = vert[(index2 * stride1) + (stride2 * 1)]
-        z2 = vert[(index2 * stride1) + (stride2 * 2)]
-        r2 = rad[index2]
-
-        if clipping == 1 and ((x1 * clip[0] + y1 * clip[1] + z1 * clip[2] + clip[3]) < 0 or
-                              (x2 * clip[0] + y2 * clip[1] + z2 * clip[2] + clip[3]) < 0):
-            continue
-
-        glColor3f(col[(index1 * 3) + 0], col[(index1 * 3) + 1], col[(index1 * 3) + 2])
-        glVertex3f(x1, y1, z1)
-        glColor3f(col[(index2 * 3) + 0], col[(index2 * 3) + 1], col[(index2 * 3) + 2])
-        glVertex3f(x2, y2, z2)
-
-    if clipping == 1:
-        for i in range(numexclude):
-            index1 = 2 * excl[i]
-            index2 = 2 * excl[i] + 1
-
-            x1 = vert[(index1 * stride1) + (stride2 * 0)]
-            y1 = vert[(index1 * stride1) + (stride2 * 1)]
-            z1 = vert[(index1 * stride1) + (stride2 * 2)]
-            r1 = rad[index1]
-
-            x2 = vert[(index2 * stride1) + (stride2 * 0)]
-            y2 = vert[(index2 * stride1) + (stride2 * 1)]
-            z2 = vert[(index2 * stride1) + (stride2 * 2)]
-            r2 = rad[index2]
-
-            glColor3f(col[(index1 * 3) + 0], col[(index1 * 3) + 1], col[(index1 * 3) + 2])
-            glVertex3f(x1, y1, z1)
-            glColor3f(col[(index2 * 3) + 0], col[(index2 * 3) + 1], col[(index2 * 3) + 2])
-            glVertex3f(x2, y2, z2)

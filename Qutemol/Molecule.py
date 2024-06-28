@@ -160,8 +160,9 @@ class Molecule:
         self.excl = numpy.array([], numpy.int32)
         if not istrj: self.load_pdb(filename)
         else: self.load_trj(filename)
+    
     def load_pdb(self,filename):
-        infile = file(filename)
+        infile = open(filename,'r').readlines()
         coords = []
         radii = []
         colors = []
@@ -558,7 +559,7 @@ def extractCurrentScaleFactor_x(x):
 def SetCsize(textsize, natoms):
     # initial guess
     i = numpy.ceil(numpy.sqrt(natoms))
-    hardSettings.CSIZE = textsize / int(i)
+    hardSettings.CSIZE = int(textsize / i)
     if (hardSettings.CSIZE > 250):
         hardSettings.CSIZE = 250
         return TOO_BIG

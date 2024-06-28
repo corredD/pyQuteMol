@@ -169,11 +169,11 @@ class CgUtil:
     def MakeShaders(self):    # activates parameters
         if (self.shadersMade): return
         self.shadersMade = True
-        if (self.idf == 666): self.idf = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idf)
+        if (self.idf == 666): self.idf = glGenProgramsARB(1)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idf)
         self.setBallFragmentProgram()
-        if (self.idv == 666): self.idv = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_VERTEX_PROGRAM_ARB, self.idv)
+        if (self.idv == 666): self.idv = glGenProgramsARB(1)
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, self.idv)
         self.setBallVertexProgram()
         self.loaded = True
         #self.MakeStickShaders()  # XXX Stick shaders not fully ported
@@ -183,28 +183,28 @@ class CgUtil:
 
     def BindShaders(self):    # binds, loads if necessary
         if not self.loaded: self.MakeShaders()
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idf)
-        glew.glBindProgramARB(glew.GL_VERTEX_PROGRAM_ARB, self.idv)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idf)
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, self.idv)
 
     def MakeStickShaders(self):
-        if (self.idfStick == 666): self.idfStick = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idfStick)
+        if (self.idfStick == 666): self.idfStick = glGenProgramsARB(1)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idfStick)
         self.setStickFragmentProgram()
 
-        if (self.idvStick==666): self.idvStick = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_VERTEX_PROGRAM_ARB, self.idvStick)
+        if (self.idvStick==666): self.idvStick = glGenProgramsARB(1)
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, self.idvStick)
         self.setStickVertexProgram()
 
         self.loadedStick=True
         
     def BindStickShaders(self):
         if not self.loadedStick:  self.MakeStickShaders()
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idfStick)
-        glew.glBindProgramARB(glew.GL_VERTEX_PROGRAM_ARB, self.idvStick)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idfStick)
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, self.idvStick)
 
     def BindDrawAOShader(self):
-        if (self.idf==666): self.idf = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idf)
+        if (self.idf==666): self.idf = glGenProgramsARB(1)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idf)
         if not self.loaded: self.MakeDrawAOShader()
         self.loaded = True
         return True
@@ -239,13 +239,13 @@ MAD origpos, data.w, nor, data;\n\
 MOV origpos.w, 1;\n'''
         fp += self.addDrawAOShaderSnippet()
 
-        glew.glProgramStringARB(glew.GL_FRAGMENT_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, fp)
+        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(fp), fp)
         if not _checkProgramError(fp): return False
         else: return True
 
     def BindDrawAOShaderSticks(self):
-        if (self.idf==666): self.idf = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idf)
+        if (self.idf==666): self.idf = glGenProgramsARB(1)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idf)
         if not self.loaded: self.MakeDrawAOShaderSticks()
         self.loaded = True
         return True
@@ -283,19 +283,19 @@ MAD nor,  n.y, fragment.texcoord[3], nor;\n\
 MAD origpos, nor, radius.y, axispos; \n\
 MOV origpos.w, 1;\n'''
         fp += self.addDrawAOShaderSnippet()
-        glew.glProgramStringARB(glew.GL_FRAGMENT_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, fp)
+        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(fp), fp)
         if not _checkProgramError(fp): return False
         else: return True
 
     def BindHaloShader(self, powres): # 1^powres = size of halo texture
         if (self.idfHalo[powres]==666):
-            self.idfHalo[powres] = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_FRAGMENT_PROGRAM_ARB, self.idfHalo[powres])
+            self.idfHalo[powres] = glGenProgramsARB(1)
+        glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, self.idfHalo[powres])
 
         if not self.loadedHalo[powres]: self.MakeHaloShader(powres)
 
-        if (self.idvHalo==666): self.idvHalo = glew.glGenProgramsARB(1)
-        glew.glBindProgramARB(glew.GL_VERTEX_PROGRAM_ARB, self.idvHalo)
+        if (self.idvHalo==666): self.idvHalo = glGenProgramsARB(1)
+        glBindProgramARB(GL_VERTEX_PROGRAM_ARB, self.idvHalo)
         if not self.loadedVertexHalo: self.LoadVertexHaloShader()
 
         self.loadedHalo[powres] = True
@@ -338,7 +338,7 @@ MUL tmp.z, tmp.z, tmp2.x;  # again for smoother edges\n'''%(self.P_halo_str-1, 1
             else: fp += "MUL result.color, {0,0,0,1}, tmp.z;\n"
         fp += "END\n"
 
-        glew.glProgramStringARB(glew.GL_FRAGMENT_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, fp)
+        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(fp), fp)
         if not _checkProgramError(fp): return False
         else: return True
 
@@ -399,7 +399,7 @@ MOV result.texcoord, dataout;\n\
         if (self.P_use_shadowmap() ): vertex_prog +=" MOV result.texcoord[3], vertex.position;\n"
         vertex_prog += "\nEND\n"
 
-        glew.glProgramStringARB(glew.GL_VERTEX_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, vertex_prog)
+        glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(vertex_prog), vertex_prog)
         if not _checkProgramError(vertex_prog): return False
         else: return True
 
@@ -427,7 +427,7 @@ MAD result.depth, -tmp.x, 0.005, fragment.position.z;\n'''
 MOV result.color, 1;\n\
 END\n'''
 
-            glew.glProgramStringARB(glew.GL_FRAGMENT_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, frag_prog)
+            glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(frag_prog), frag_prog)
             if not _checkProgramError(frag_prog): return False
             else: return True
 
@@ -522,7 +522,7 @@ MAD t, t0, {%5.2f, %5.2f, 0,0},          \n\
         frag_prog += '''\
 ADD result.color, res, {0,0,0,1};\n\n\
 END\n'''
-        glew.glProgramStringARB(glew.GL_FRAGMENT_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, frag_prog)
+        glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(frag_prog), frag_prog)
         if not _checkProgramError(frag_prog): return False
         else: return True
 
@@ -561,7 +561,7 @@ MOV result.position, p;\n\
 MOV result.texcoord, dataout;\n\
 \nEND\n'''
 
-        glew.glProgramStringARB(glew.GL_VERTEX_PROGRAM_ARB, glew.GL_PROGRAM_FORMAT_ASCII_ARB, vp);
+        glProgramStringARB(GL_VERTEX_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len(vp), vp);
         if not _checkProgramError(vp): return False
         else: return True
 
@@ -796,13 +796,13 @@ END\n'''%(nvidia_patch)
 def _checkProgramError(prog):
     res = True
     while (True):
-        error = glew.glGetError()
-        if (error == glew.GL_NO_ERROR): return res
+        error = glGetError()
+        if (error == GL_NO_ERROR): return res
         res = False
-        if (error == glew.GL_INVALID_OPERATION):
+        if (error == GL_INVALID_OPERATION):
             print( prog)
-            errPos = glGetIntegerv(glew.GL_PROGRAM_ERROR_POSITION_ARB)
-            errString = glGetString(glew.GL_PROGRAM_ERROR_STRING_ARB)
+            errPos = glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB)
+            errString = glGetString(GL_PROGRAM_ERROR_STRING_ARB)
             print(( "error at position: %d\n[%s]"%(errPos,errString)))
             print( "\n\"...")
             for i in range(errPos-40,errPos+40):
@@ -823,40 +823,40 @@ def __showShaderInfo(fp):
     k = numpy.zeros(size, numpy.int32)
     h = numpy.zeros(size, numpy.int32)
 
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_INSTRUCTIONS_ARB,     i)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB, i+1)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_TEX_INSTRUCTIONS_ARB, i+2)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_TEX_INDIRECTIONS_ARB, i+3)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_TEMPORARIES_ARB,      i+4)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_PARAMETERS_ARB,       i+5)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_ATTRIBS_ARB,          i+6)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_INSTRUCTIONS_ARB,     i)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_ALU_INSTRUCTIONS_ARB, i+1)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_TEX_INSTRUCTIONS_ARB, i+2)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_TEX_INDIRECTIONS_ARB, i+3)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_TEMPORARIES_ARB,      i+4)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_PARAMETERS_ARB,       i+5)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_ATTRIBS_ARB,          i+6)
     
-    glew.glGetProgramivARB(fp, GL_PROGRAM_INSTRUCTIONS_ARB,     j)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_ALU_INSTRUCTIONS_ARB, i+1)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_TEX_INSTRUCTIONS_ARB, j+2)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_TEX_INDIRECTIONS_ARB, j+3)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_TEMPORARIES_ARB,      j+4)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_PARAMETERS_ARB,       j+5)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_ATTRIBS_ARB,          j+6)
+    glGetProgramivARB(fp, GL_PROGRAM_INSTRUCTIONS_ARB,     j)
+    glGetProgramivARB(fp, GL_PROGRAM_ALU_INSTRUCTIONS_ARB, i+1)
+    glGetProgramivARB(fp, GL_PROGRAM_TEX_INSTRUCTIONS_ARB, j+2)
+    glGetProgramivARB(fp, GL_PROGRAM_TEX_INDIRECTIONS_ARB, j+3)
+    glGetProgramivARB(fp, GL_PROGRAM_TEMPORARIES_ARB,      j+4)
+    glGetProgramivARB(fp, GL_PROGRAM_PARAMETERS_ARB,       j+5)
+    glGetProgramivARB(fp, GL_PROGRAM_ATTRIBS_ARB,          j+6)
     
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_INSTRUCTIONS_ARB,     k)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB, k+1)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB, k+2)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB, k+3)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_TEMPORARIES_ARB,      k+4)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_PARAMETERS_ARB,       k+5)
-    glew.glGetProgramivARB(fp, GL_PROGRAM_NATIVE_ATTRIBS_ARB,          k+6)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_INSTRUCTIONS_ARB,     k)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB, k+1)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB, k+2)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB, k+3)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_TEMPORARIES_ARB,      k+4)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_PARAMETERS_ARB,       k+5)
+    glGetProgramivARB(fp, GL_PROGRAM_NATIVE_ATTRIBS_ARB,          k+6)
     
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB,     h)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB, h+1)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB, h+2)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB, h+3)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB,      h+4)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_PARAMETERS_ARB,       h+5)
-    glew.glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB,          h+6)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB,     h)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_ALU_INSTRUCTIONS_ARB, h+1)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_TEX_INSTRUCTIONS_ARB, h+2)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_TEX_INDIRECTIONS_ARB, h+3)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB,      h+4)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_PARAMETERS_ARB,       h+5)
+    glGetProgramivARB(fp, GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB,          h+6)
 
     st = ["Instr","Alu Instr","Tex Instr","Tex Indir","Temp","Param","Attr"]
-    if (fp==glew.GL_FRAGMENT_PROGRAM_ARB): outst = "FRAGMENT"
+    if (fp==GL_FRAGMENT_PROGRAM_ARB): outst = "FRAGMENT"
     else: outst = "VERTEX"
     print(( "            %s PROGRAM STATS       "%outst))
     print( "              original    |  native         ")
