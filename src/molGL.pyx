@@ -1,6 +1,9 @@
 cdef extern from "Python.h":
     ctypedef int Py_intptr_t
 
+cdef extern from "windows.h"
+    pass
+    
 cdef extern from "numpy/arrayobject.h":
     ctypedef class numpy.ndarray [object PyArrayObject]:
         cdef char *data
