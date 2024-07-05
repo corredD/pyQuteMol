@@ -34,8 +34,8 @@ ERRGL_NO_FBO_HALO = 8
 ERRGL_NO_FBO_AO = 16
 ERRGL_NO_GLEW = 32
 
-width = 512 * 2
-height = 512 * 2
+width = 512
+height = 512
 oldX, oldY = 0, 0
 mustDoHQ = True
 
