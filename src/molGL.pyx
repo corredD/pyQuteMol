@@ -19,8 +19,8 @@ ctypedef float GLfloat
 cdef extern from "myrand.h":
     float myrand()
 
-cdef extern from "windows.h":
-    pass
+#cdef extern from "windows.h":
+#    pass
 
 cdef extern from "GL/glew.h":
     GLenum glewInit()
@@ -29,7 +29,18 @@ cdef extern from "GL/glew.h":
     void glMultiTexCoord2fARB(GLenum target, GLfloat s, GLfloat t)
     void glMultiTexCoord4fARB(GLenum target, GLfloat s, GLfloat t, GLfloat u, GLfloat v)
 
-cdef extern from "GL/gl.h":
+cdef extern from *:
+    """
+    #if defined(__APPLE__)
+    #include <OpenGL/gl.h>
+    #elif defined(_WIN32)
+    #include <GL/gl.h>
+    #elif defined(__linux__)
+    #include <GL/gl.h>
+    #else
+    #error "Unsupported platform"
+    #endif
+    """
     void glVertex2f(GLfloat x, GLfloat y)
     void glVertex3f(GLfloat x, GLfloat y, GLfloat z)
     void glNormal3f(GLfloat nx, GLfloat ny, GLfloat nz)

@@ -11,6 +11,7 @@ from Cython.Build import cythonize
 import numpy
 include_dirs = [numpy.get_include()]
 library_dirs =[]
+extra_compile_args=[]
 # Determine the extra link arguments based on the platform
 # C:\Program Files (x86)\Windows Kits\10\Lib\10.0.19041.0\um\x64
 if sys.platform == 'win32':
@@ -22,8 +23,11 @@ if sys.platform == 'win32':
     libraries = ["OpenGL32", "glew32"]
     extra_link_args = []
 elif sys.platform == 'darwin':
+    include_dirs.append("/opt/homebrew/include")
+    library_dirs.append("/opt/homebrew/lib")
     extra_link_args = ["-framework", "OpenGL"]
-    libraries = []
+    extra_compile_args=['-framework', 'OpenGL']
+    libraries = ["GLEW"]
 elif sys.platform.startswith('linux'):
     extra_link_args = []
     libraries = ["GL", "GLU"]
@@ -39,7 +43,8 @@ extensions = [
               libraries = libraries,
               library_dirs = library_dirs,
               include_dirs = include_dirs,
-              extra_link_args=extra_link_args
+              extra_link_args = extra_link_args,
+              extra_compile_args = extra_compile_args
               )
     ]
 
