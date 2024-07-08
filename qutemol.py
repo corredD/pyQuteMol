@@ -21,10 +21,28 @@ from Qutemol.ShadowMap import ShadowMap, AOgpu2
 from Qutemol.trackball import glTrackball
 from Qutemol.quaternion import quaternion
 from Qutemol import molGL
-from Qutemol.presets import real, real2, direct, illustr, illustr2, illustr_motm, qutemol1, qutemol2, qutemol3, coolb, coold, borders_cool, sem, sem2, shape, illustr_new, illustrm
+from Qutemol.presets import (
+    real,
+    real2,
+    direct,
+    illustr,
+    illustr2,
+    illustr_motm,
+    qutemol1,
+    qutemol2,
+    qutemol3,
+    coolb,
+    coold,
+    borders_cool,
+    sem,
+    sem2,
+    shape,
+    illustr_new,
+    illustrm,
+)
 
-#from IPython.Shell import IPShellEmbed
-#ipshell = IPShellEmbed()
+# from IPython.Shell import IPShellEmbed
+# ipshell = IPShellEmbed()
 
 ERRGL_OK = 0
 ERRGL_NO_FS = 1
@@ -39,25 +57,32 @@ height = 512
 oldX, oldY = 0, 0
 mustDoHQ = True
 
-def saveSnapshot(res, mol, filename = "snapshot", hires = True):
+
+def saveSnapshot(res, mol, filename="snapshot", hires=True):
     global draw_axes
     save_draw_axes = draw_axes
     draw_axes = False
     mainCanvas.RedirectToMemory()
-    if hires: res *= 2
+    if hires:
+        res *= 2
     mainCanvas.SetRes(res)
-    if not mainCanvas.SetAsOutput(): raise Exception()
-    
+    if not mainCanvas.SetAsOutput():
+        raise Exception()
+
     drawFrame(mol)
 
     res = mainCanvas.GetHardRes()
-    data = glReadPixels(0,0,res,res,GL_RGB,GL_UNSIGNED_BYTE)
-    image = Image.fromstring("RGB", (data.shape[1], data.shape[0]), data[::-1].tostring())
-    if hires: image = image.resize((res/2, res/2), Image.ANTIALIAS)
-    image.save(filename+".png")
+    data = glReadPixels(0, 0, res, res, GL_RGB, GL_UNSIGNED_BYTE)
+    image = Image.fromstring(
+        "RGB", (data.shape[1], data.shape[0]), data[::-1].tostring()
+    )
+    if hires:
+        image = image.resize((res / 2, res / 2), Image.ANTIALIAS)
+    image.save(filename + ".png")
     mainCanvas.RedirectToVideo()
     mainCanvas.SetAsOutput()
     draw_axes = save_draw_axes
+
 
 def initGL(shadowmap, cgSettings, winx):
     res = 0
@@ -78,32 +103,43 @@ def initGL(shadowmap, cgSettings, winx):
     #    res |= ERRGL_NO_GLEW
 
     # XXX override in glew_wrap.py
-    #if not glew.GLEW_ARB_vertex_program: res |= ERRGL_NO_VS
-    #if not glew.GLEW_ARB_fragment_program: res |= ERRGL_NO_FS
+    # if not glew.GLEW_ARB_vertex_program: res |= ERRGL_NO_VS
+    # if not glew.GLEW_ARB_fragment_program: res |= ERRGL_NO_FS
 
-    if not shadowmap.init(winx): res |= ERRGL_NO_FBO_SHADOWMAP
-    if not shadowmap.initHalo(): res |= ERRGL_NO_FBO_HALO
-    if not AOgpu2.init(): res |= ERRGL_NO_FBO_AO
+    if not shadowmap.init(winx):
+        res |= ERRGL_NO_FBO_SHADOWMAP
+    if not shadowmap.initHalo():
+        res |= ERRGL_NO_FBO_HALO
+    if not AOgpu2.init():
+        res |= ERRGL_NO_FBO_AO
     cgSettings.UpdateShaders()
 
     if not res == ERRGL_OK:
         # Print error message
         errmsg = "Unrecoverable error: Problems initializing graphics\n"
-        if (res & ERRGL_NO_GLEW): errmsg += " - cannot initialize GLEW\n"+lasterr+"\n"
-        if (res & ERRGL_NO_FS): errmsg += " - no Programmable Fragment Shader found\n"
-        if (res & ERRGL_NO_VS): errmsg += " - no Programmable Vertex Shader found\n"
-        if (res & ERRGL_NO_FBO_SHADOWMAP): errmsg += " - cannot initialize FrameBufferObject for shadowmaps\n"
-        if (res & ERRGL_NO_FBO_HALO): errmsg += " - cannot initialize FrameBufferObject for halos\n"
-        if (res & ERRGL_NO_FBO_AO): errmsg += " - cannot initialize FrameBufferObject for A.O. computation\n"
+        if res & ERRGL_NO_GLEW:
+            errmsg += " - cannot initialize GLEW\n" + lasterr + "\n"
+        if res & ERRGL_NO_FS:
+            errmsg += " - no Programmable Fragment Shader found\n"
+        if res & ERRGL_NO_VS:
+            errmsg += " - no Programmable Vertex Shader found\n"
+        if res & ERRGL_NO_FBO_SHADOWMAP:
+            errmsg += " - cannot initialize FrameBufferObject for shadowmaps\n"
+        if res & ERRGL_NO_FBO_HALO:
+            errmsg += " - cannot initialize FrameBufferObject for halos\n"
+        if res & ERRGL_NO_FBO_AO:
+            errmsg += " - cannot initialize FrameBufferObject for A.O. computation\n"
         raise Exception(errmsg)
+
 
 def setLightDir(d):
     f = (d[0], d[1], d[2], 0)
     glLightfv(GL_LIGHT0, GL_POSITION, f)
 
+
 # This is not necessary any more - but I really have to figure out what I'm
 # doing with the model-view matrices
-#def getDirFromTrackball(mol):
+# def getDirFromTrackball(mol):
 #    # XXX this is complete wrong, but it shows that shadowing works
 #    glPushMatrix()
 #    gluLookAt(1,-3,-5,   0,0,0,   0,1,0)
@@ -115,10 +151,11 @@ def setLightDir(d):
 #    res /= numpy.linalg.norm(res)
 #    return res
 
+
 def getGlLightPos():
-    pos = glGetLightfv(GL_LIGHT0,GL_POSITION)
+    pos = glGetLightfv(GL_LIGHT0, GL_POSITION)
     x = glGetFloatv(GL_MODELVIEW_MATRIX)
-    res = numpy.inner(x,pos.T)
+    res = numpy.inner(x, pos.T)
     res /= numpy.linalg.norm(res)
     return -res[:3]
 
@@ -130,13 +167,14 @@ def setProjection(res):
     nearPlane = 0.01
     farPlane = 10000
     size = 1.2
-    ratio = size*winx/winy
+    ratio = size * winx / winy
     if cgSettings.projmode == cgSettings.PERSPECTIVE:
         gluPerspective(60.0, ratio, nearPlane, farPlane)
     else:
-        glOrtho(-winx/winy, winx/winy,-1,1,40-2,40+200)
-    glViewport(0,0,winx,winy)
+        glOrtho(-winx / winy, winx / winy, -1, 1, 40 - 2, 40 + 200)
+    glViewport(0, 0, winx, winy)
     glMatrixMode(GL_MODELVIEW)
+
 
 def makeHiQualityScreen(quality, mol):
     # XXX This function does not currently work
@@ -146,7 +184,7 @@ def makeHiQualityScreen(quality, mol):
     mainCanvas.RedirectToMemory()
     # Render into a higher quality buffer,
     # resample into smaller main window
-    mainCanvas.SetRes(curres*quality / 100)
+    mainCanvas.SetRes(curres * quality / 100)
     if not mainCanvas.SetAsOutput():
         # something's wrong - do a normal screen
         mainCanvas.RedirectToVideo()
@@ -175,59 +213,77 @@ def makeHiQualityScreen(quality, mol):
     glEnable(GL_TEXTURE_2D)
     glDisable(GL_DEPTH_TEST)
 
-    glColor3f(1.,1.,1.)
+    glColor3f(1.0, 1.0, 1.0)
 
-    z=-45.
+    z = -45.0
 
     glBegin(GL_QUADS)
-    glTexCoord2f(0,0); glVertex3f(-1,-1, z)
-    glTexCoord2f(HSratio,0); glVertex3f(+1,-1, z)
-    glTexCoord2f(HSratio,HSratio); glVertex3f(+1,+1, z)
-    glTexCoord2f(0,HSratio); glVertex3f(-1,+1, z)
+    glTexCoord2f(0, 0)
+    glVertex3f(-1, -1, z)
+    glTexCoord2f(HSratio, 0)
+    glVertex3f(+1, -1, z)
+    glTexCoord2f(HSratio, HSratio)
+    glVertex3f(+1, +1, z)
+    glTexCoord2f(0, HSratio)
+    glVertex3f(-1, +1, z)
     glEnd()
 
     glEnable(GL_FRAGMENT_PROGRAM_ARB)
     glEnable(GL_VERTEX_PROGRAM_ARB)
     glEnable(GL_DEPTH_TEST)
 
+
 def drawScene(mol):
     # XXX High quality screen version not working yet
-    #if (mustDoHQ): makeHiQualityScreen(hardSettings.STILL_QUALITY, mol)
-    #else: drawFrame(mol)
+    # if (mustDoHQ): makeHiQualityScreen(hardSettings.STILL_QUALITY, mol)
+    # else: drawFrame(mol)
     drawFrame(mol)
     glutSwapBuffers()
 
+
 def drawFrame(mol):
     cgSettings.MakeShaders()
-    if (mol.DoingAO()):
+    if mol.DoingAO():
         mol.PrepareAOstep(1, shadowmap)
-        while not mol.DecentAO(): mol.PrepareAOstep(1, shadowmap)
+        while not mol.DecentAO():
+            mol.PrepareAOstep(1, shadowmap)
 
     mainCanvas.SetAsOutput()
     if cgSettings.doingAlphaSnapshot:
-        glClearColor( cgSettings.P_halo_col, cgSettings.P_halo_col, cgSettings.P_halo_col, 0.0)
+        glClearColor(
+            cgSettings.P_halo_col, cgSettings.P_halo_col, cgSettings.P_halo_col, 0.0
+        )
     else:
-        glClearColor( cgSettings.P_bg_color_R, cgSettings.P_bg_color_G, cgSettings.P_bg_color_B, 0.0)
+        glClearColor(
+            cgSettings.P_bg_color_R,
+            cgSettings.P_bg_color_G,
+            cgSettings.P_bg_color_B,
+            0.0,
+        )
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
-    if cgSettings.P_sem_effect: lightDir = (0,0,1)
-    #else: lightDir= getDirFromTrackball(mol) #(0,0.8,0.6)
-    else: lightDir= (0.,0.8,0.6)
-    #else: lightDir= (1,1,1)
+    if cgSettings.P_sem_effect:
+        lightDir = (0, 0, 1)
+    # else: lightDir= getDirFromTrackball(mol) #(0,0.8,0.6)
+    else:
+        lightDir = (0.0, 0.8, 0.6)
+    # else: lightDir= (1,1,1)
 
     setLightDir(lightDir)
 
-    gluLookAt(0,0,-40,   0,0,0,   0,1,0)
-    #if (MovingLightMode): drawLightDir()
-    glColor3f(1,1,1)
+    gluLookAt(0, 0, -40, 0, 0, 0, 0, 1, 0)
+    # if (MovingLightMode): drawLightDir()
+    glColor3f(1, 1, 1)
     setProjection(mainCanvas.GetSoftRes())
 
     if cgSettings.P_use_shadowmap():
-        shadowmap.computeAsTexture(getGlLightPos() , cgSettings.do_use_doubleshadow(), shadowmapCanvas)
+        shadowmap.computeAsTexture(
+            getGlLightPos(), cgSettings.do_use_doubleshadow(), shadowmapCanvas
+        )
     cgSettings.BindShaders()
     glEnable(GL_TEXTURE_2D)
     glActiveTextureARB(GL_TEXTURE1_ARB)
@@ -238,67 +294,71 @@ def drawFrame(mol):
     glDisable(GL_FRAGMENT_PROGRAM_ARB)
     glDisable(GL_BLEND)
 
-    if (cgSettings.UseHalo() > 0):
+    if cgSettings.UseHalo() > 0:
         shadowmap.prepareDepthTextureForCurrentViewpoint()
         mol.DrawHalos()
-    
+
     # Draw axes
     if draw_axes:
         px, py, pz = mol.pos
         r = mol.r
         orien = mol.orien
         glPushMatrix()
-        glScalef(1./r,1./r,1./r)
+        glScalef(1.0 / r, 1.0 / r, 1.0 / r)
         glMultMatrixd((glTrackball.quat * orien).asRotation())
         glTranslatef(-px, -py, -pz)
         glDisable(GL_LIGHTING)
         glBegin(GL_LINES)
-        glColor3f(0.,0.,0.)
+        glColor3f(0.0, 0.0, 0.0)
         glVertex3f(px, py, pz)
-        glColor3f(0.,1.,0.)
-        glVertex3f(px+r, py, pz)
-        glColor3f(0.,0.,0.)
+        glColor3f(0.0, 1.0, 0.0)
+        glVertex3f(px + r, py, pz)
+        glColor3f(0.0, 0.0, 0.0)
         glVertex3f(px, py, pz)
-        glColor3f(1.,0.,0.)
-        glVertex3f(px, py+r, pz)
-        glColor3f(0.,0.,0.)
+        glColor3f(1.0, 0.0, 0.0)
+        glVertex3f(px, py + r, pz)
+        glColor3f(0.0, 0.0, 0.0)
         glVertex3f(px, py, pz)
-        glColor3f(0.,0.,1.)
-        glVertex3f(px, py, pz+r)
+        glColor3f(0.0, 0.0, 1.0)
+        glVertex3f(px, py, pz + r)
         glEnd()
         glPopMatrix()
+
 
 def onMouseButton(button, state, x, y):
     global oldX, oldY
     global isRotating, isZooming, isClipping
     global mustDoHQ
     oldX, oldY = x, y
-    if (button == GLUT_LEFT_BUTTON):
-        if (state == GLUT_DOWN):
+    if button == GLUT_LEFT_BUTTON:
+        if state == GLUT_DOWN:
             mustDoHQ = False
             isRotating = True
-        elif (state == GLUT_UP):
+        elif state == GLUT_UP:
             mol.orien = glTrackball.quat * mol.orien
             glTrackball.reset()
             mustDoHQ = True
             isRotating = not isRotating
             glutPostRedisplay()
-    elif (button == GLUT_RIGHT_BUTTON):
+    elif button == GLUT_RIGHT_BUTTON:
         keys = glutGetModifiers()
-        if (keys & GLUT_ACTIVE_SHIFT):
-            if (state == GLUT_DOWN):
+        if keys & GLUT_ACTIVE_SHIFT:
+            if state == GLUT_DOWN:
                 isClipping = True
-            elif (state == GLUT_UP):
+            elif state == GLUT_UP:
                 isClipping = not isClipping
         else:
-            if (state == GLUT_DOWN):
+            if state == GLUT_DOWN:
                 isZooming = True
-            elif (state == GLUT_UP):
+            elif state == GLUT_UP:
                 isZooming = not isZooming
+
 
 isRotating = False
 isZooming = False
 isClipping = False
+
+
 def onMouseDrag(x, y):
     global clipplane, oldY, oldX
     if isRotating:
@@ -306,20 +366,41 @@ def onMouseDrag(x, y):
     elif isZooming:
         ydiff = y - oldY
         oldX, oldY = x, y
-        mol.scaleFactor += -0.1*ydiff*mol.scaleFactor
-        if mol.scaleFactor < 0.1: mol.scaleFactor = 0.1
+        mol.scaleFactor += -0.1 * ydiff * mol.scaleFactor
+        if mol.scaleFactor < 0.1:
+            mol.scaleFactor = 0.1
     elif isClipping:
         ydiff = oldY - y
         oldX, oldY = x, y
         clipplane[1] = -1
-        #clipplane[0] = -1
-        clipplane += [0, 0, 0, 0.1*ydiff]
+        # clipplane[0] = -1
+        clipplane += [0, 0, 0, 0.1 * ydiff]
     glutPostRedisplay()
 
-shaders = [direct, illustr_motm, real, real2, illustr, illustr_new, qutemol1, qutemol2, qutemol3, coolb, coold, borders_cool, sem, sem2, shape, illustrm]
+
+shaders = [
+    direct,
+    illustr_motm,
+    real,
+    real2,
+    illustr,
+    illustr_new,
+    qutemol1,
+    qutemol2,
+    qutemol3,
+    coolb,
+    coold,
+    borders_cool,
+    sem,
+    sem2,
+    shape,
+    illustrm,
+]
+
 
 def printHelp():
-    print('''\
+    print(
+        """\
 Welcomd to pyQutemol
 
 Left mouse button to rotate the system
@@ -348,16 +429,21 @@ c             - change primary selection
 e             - change excluded selection (shown even with the clipping plane)
 
 The selections only work if you have loaded a psf/dcd combination
-''')
+"""
+    )
+
 
 run_trj = False
 draw_axes = True
+
+
 def keyfunc_mol(mol, shadowmap):
     shader_i = [0]
+
     def keyfunc(k, x, y):
         global run_trj, draw_axes
         # print(f"Key pressed: {k} (ord: {ord(k)})")  # Debugging statement
-        if k == b"q" or ord(k) == 27: # Escape
+        if k == b"q" or ord(k) == 27:  # Escape
             sys.exit(0)
         elif k == b"h":
             printHelp()
@@ -370,19 +456,25 @@ def keyfunc_mol(mol, shadowmap):
             mol.read_previous_frame()
             glutPostRedisplay()
         elif k == b"j":
-            print(("Current frame %d, Total frames %d, select frame:"%(mol.universe.dcd.ts.frame, mol.universe.dcd.numframes)))
+            print(
+                (
+                    "Current frame %d, Total frames %d, select frame:"
+                    % (mol.universe.dcd.ts.frame, mol.universe.dcd.numframes)
+                )
+            )
             selection = input("> ")
             try:
                 frameno = int(selection)
                 mol.universe.dcd[frameno]
                 glutPostRedisplay()
             except:
-                print( "Invalid frame")
+                print("Invalid frame")
         elif k == b"+":
             mol.averaging += 1
         elif k == b"-":
             mol.averaging -= 1
-            if mol.averaging < 1: mol.averaging = 1
+            if mol.averaging < 1:
+                mol.averaging = 1
         elif k == b"r":
             run_trj = not run_trj
         elif k == b"v":
@@ -392,16 +484,18 @@ def keyfunc_mol(mol, shadowmap):
             draw_axes = not draw_axes
             glutPostRedisplay()
         elif k == b"s":
-            saveSnapshot(mainCanvas.GetHardRes()*2, mol)
+            saveSnapshot(mainCanvas.GetHardRes() * 2, mol)
         elif k == b"g":
             shader_i[0] += 1
-            if shader_i[0] == len(shaders): shader_i[0] = 0
+            if shader_i[0] == len(shaders):
+                shader_i[0] = 0
             shaders[shader_i[0]].set(cgSettings)
             cgSettings.UpdateShaders()
             glutPostRedisplay()
         elif k == b"G":
             shader_i[0] -= 1
-            if shader_i[0] == -1: shader_i[0] = len(shaders)-1
+            if shader_i[0] == -1:
+                shader_i[0] = len(shaders) - 1
             shaders[shader_i[0]].set(cgSettings)
             cgSettings.UpdateShaders()
             glutPostRedisplay()
@@ -411,19 +505,19 @@ def keyfunc_mol(mol, shadowmap):
         elif k == b"m":
             makeMovie(mol)
         elif k == b"k":
-            print( "Make selection for color change:")
+            print("Make selection for color change:")
             selection = input("> ")
             try:
                 sel = mol.universe.selectAtoms(selection)
                 idx = sel.indices()
                 print("input color:")
                 color = input("> ")
-                mol.colors[idx] = convert_color(int(color,0))
+                mol.colors[idx] = convert_color(int(color, 0))
                 glutPostRedisplay()
             except:
-                print( "Invalid selection")
+                print("Invalid selection")
         elif k == b"e":
-            print( "Make selection for exclusion:")
+            print("Make selection for exclusion:")
             selection = input("> ")
             try:
                 sel = mol.universe.selectAtoms(selection)
@@ -431,32 +525,32 @@ def keyfunc_mol(mol, shadowmap):
                 mol.ResetAO()
                 glutPostRedisplay()
             except:
-                print( "Invalid selection")
+                print("Invalid selection")
         elif k == b"c":
-            print( "Make new selection:")
+            print("Make new selection:")
             selection = input("> ")
             try:
                 mol.sel = mol.universe.selectAtoms(selection)
                 mol.pos = mol.sel.centerOfGeometry()
                 coor = mol.sel.coordinates()
                 min, max = numpy.minimum.reduce(coor), numpy.maximum.reduce(coor)
-                mol.r = 0.5*numpy.sqrt(numpy.sum(numpy.power(max-min-4,2)))
+                mol.r = 0.5 * numpy.sqrt(numpy.sum(numpy.power(max - min - 4, 2)))
                 mol.min, mol.max = min, max
                 mol.idx = mol.sel.indices()
                 mol.ResetAO()
                 glutPostRedisplay()
             except:
-                print( "Invalid selection")
+                print("Invalid selection")
         elif k == b"x":
             mol.orien *= 0
-            v = numpy.sin(numpy.pi/4.)
-            mol.orien = quaternion([-.5,-.5,0.5,0.5])
+            v = numpy.sin(numpy.pi / 4.0)
+            mol.orien = quaternion([-0.5, -0.5, 0.5, 0.5])
             glTrackball.reset()
             glutPostRedisplay()
         elif k == b"y":
             mol.orien *= 0
-            v = numpy.sin(numpy.pi/4.)
-            mol.orien.array += [-v,-v,0,0]
+            v = numpy.sin(numpy.pi / 4.0)
+            mol.orien.array += [-v, -v, 0, 0]
             glTrackball.reset()
             glutPostRedisplay()
         elif k == b"z":
@@ -464,29 +558,32 @@ def keyfunc_mol(mol, shadowmap):
             mol.orien.array[2] = -1
             glTrackball.reset()
             glutPostRedisplay()
+
     return keyfunc
+
 
 def makeMovie(mol):
     import tempfile
     import shutil
+
     path = tempfile.mkdtemp()
     path = "./movie"
-    print( "Making movie")
+    print("Making movie")
     try:
         # Start trajectory
-        res = mainCanvas.GetHardRes()*2
-        mol.universe.dcd.skip=200
+        res = mainCanvas.GetHardRes() * 2
+        mol.universe.dcd.skip = 200
         mol.universe.dcd._reset_dcd_read()
         numframes = len(mol.universe.dcd)
         i = 0
 
         # First do a cool trick with the clipping plane
-        #mol.clipplane *= 0
-        #mol.clipplane[1] = -1
-        #bbox = mol.max-mol.min
-        #clippositions = numpy.arange(1.1*mol.max[1], 1.1*mol.min[1], -0.5)
-        #clippositions = numpy.concatenate((clippositions, clippositions[::-1]))
-        #for clippos in clippositions:
+        # mol.clipplane *= 0
+        # mol.clipplane[1] = -1
+        # bbox = mol.max-mol.min
+        # clippositions = numpy.arange(1.1*mol.max[1], 1.1*mol.min[1], -0.5)
+        # clippositions = numpy.concatenate((clippositions, clippositions[::-1]))
+        # for clippos in clippositions:
         #    print "Saving frame %d of %d"%(i, len(clippositions))
         #    mol.clipplane[-1] = clippos
         #    mol.ResetAO()
@@ -494,33 +591,39 @@ def makeMovie(mol):
         #    saveSnapshot(res,mol,path+"/img%06d"%i, True)
         #    i += 1
 
-        #md_range = range(0,200,10)
-        #k = 0
-        #for l, time in enumerate(md_range):
+        # md_range = range(0,200,10)
+        # k = 0
+        # for l, time in enumerate(md_range):
         #    ts = mol.universe.dcd[time]
         #    print "Saving frame %d of %d"%(ts.frame, numframes)
-            #if l > (len(md_range) - len(clippositions)):
-            #    # start moving clipplane back
-            #    mol.clipplane[-1] = clippositions[::-1][k]
-            #    k += 1
+        # if l > (len(md_range) - len(clippositions)):
+        #    # start moving clipplane back
+        #    mol.clipplane[-1] = clippositions[::-1][k]
+        #    k += 1
         #    saveSnapshot(res, mol, path+"/img%06d"%(ts.frame), True)
         #    i+=1
 
         j = 0
-        for i in range(0,numframes, mol.universe.dcd.skip):
+        for i in range(0, numframes, mol.universe.dcd.skip):
             mol.universe.dcd[i]
-            print(( "Saving snapshot %d of %d (frame %d)"%(i+1, numframes, mol.universe.dcd.ts.frame)))
-            saveSnapshot(res, mol, path+"/img%06d"%(j))
+            print(
+                (
+                    "Saving snapshot %d of %d (frame %d)"
+                    % (i + 1, numframes, mol.universe.dcd.ts.frame)
+                )
+            )
+            saveSnapshot(res, mol, path + "/img%06d" % (j))
             j += 1
 
         # Now generate movie
-        #output = "test.mp4"
-        #movie_cmd = "ffmpeg2 -r 10 -b 1800 -y -i %s/img%%06d.png %s"%(path,output)
-        #os.system(movie_cmd)
-        #shutil.rmtree(path)
+        # output = "test.mp4"
+        # movie_cmd = "ffmpeg2 -r 10 -b 1800 -y -i %s/img%%06d.png %s"%(path,output)
+        # os.system(movie_cmd)
+        # shutil.rmtree(path)
     except:
         shutil.rmtree(path)
         raise
+
 
 def idlefunc_mol(mol):
     def idlefunc():
@@ -528,37 +631,44 @@ def idlefunc_mol(mol):
         if run_trj:
             mol.read_next_frame()
             glutPostRedisplay()
+
     return idlefunc
+
 
 def resize_window(w, h):
     global width, height
     width, height = w, h
     glViewport(0, 0, w, h)
-    setProjection(min(w, h))  # Assuming setProjection adjusts the projection based on resolution
+    setProjection(
+        min(w, h)
+    )  # Assuming setProjection adjusts the projection based on resolution
     # mainCanvas.SetRes()
     glutPostRedisplay()
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     # Get around a bug in GLUT on OS X
     cwd = os.getcwd()
     glutInit()
     os.chdir(cwd)
     if len(sys.argv) != 4:
-        print(( "Usage: %s [prefix] [is_trj] [is_coarsegrain]"%sys.argv[0]))
-        print( "If viewing a trajectory, prefix should be the name of the psf/dcd combo without the extension")
-        print( "otherwise the name of the pdb file")
+        print(("Usage: %s [prefix] [is_trj] [is_coarsegrain]" % sys.argv[0]))
+        print(
+            "If viewing a trajectory, prefix should be the name of the psf/dcd combo without the extension"
+        )
+        print("otherwise the name of the pdb file")
         sys.exit(0)
 
     prefix = sys.argv[1]
     istrj = sys.argv[2]
     iscoarse = sys.argv[3]
 
-    istrj = (int(istrj) == 1)
-    iscoarse = (int(iscoarse) == 1)
+    istrj = int(istrj) == 1
+    iscoarse = int(iscoarse) == 1
 
-    glutInitDisplayMode(GLUT_DOUBLE |  GLUT_RGB | GLUT_DEPTH )
-    glutInitWindowSize( width, height)
-    glutCreateWindow( sys.argv[0] )
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
+    glutInitWindowSize(width, height)
+    glutCreateWindow(sys.argv[0])
 
     mol = Molecule(prefix, istrj, iscoarse)
 
