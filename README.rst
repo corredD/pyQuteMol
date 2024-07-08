@@ -73,7 +73,13 @@ pip install cython
 pip install PyOpenGL
 pip install mdanalysis
 python setup.py build_ext --inplace --verbose
+
 python qutemol.py 1crn.pdb 0 0
 
+# pygfx
+pip install -U pygfx glfw
+pip install pylinalg
+pip install gemmi
+python multi_select.py
  
  Download the file for your platform. If you're not sure which to choose, learn more about  installing packages.

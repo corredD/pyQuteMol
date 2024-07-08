@@ -38,8 +38,21 @@ import gemmi
 
 
 class Triangle(gfx.WorldObject):
-    pass
-
+    mol=None
+    mapping = []
+    coords = []
+    def setMol(self,mol):
+        self.mol = mol
+        self.coords = []
+        for model in self.mol:
+            for chain in model:
+                for residue in chain:
+                    for atom in residue:
+                        self.coords.append(atom.pos.tolist())
+                        self.mapping.append([atom,residue,chain,model])
+        self.coords = np.array(coords).astype(np.float32)
+        # center coords
+        self.coords -= coords.mean(axis=0)
 
 class TriangleMaterial(gfx.Material):
     uniform_type = dict(
@@ -179,7 +192,7 @@ class TriangleShader(BaseShader):
             varyings.world_pos = vec3<f32>(ndc_to_world_pos(vec4<f32>(screen_pos_ndc, ndc_pos.zw)));
             // varyings.world_pos  = vec4<f32>(1.0, 1.0, 1.0, 1.0);
             // Picking
-            varyings.pick_idx = u32(index);
+            varyings.pick_idx = u32(vertex_index);
             return varyings;
         }
 
@@ -270,7 +283,7 @@ def select(event):
     # to get a reference to the node that is currently handling
     # the event, which can be a Mesh, a Group or None (the event root)
     obj = event.current_target
-    print("select", obj)
+    
     # prevent propagation so we handle this event only at one
     # level in the hierarchy
     event.stop_propagation()
@@ -284,7 +297,11 @@ def select(event):
     # if the background was clicked, we're done
     if isinstance(obj, gfx.Renderer):
         return
-
+    
+    atid = vertex_index = event.pick_info["vertex_index"]   
+    print("select", obj, obj.mol, atid)
+    print(obj.mapping[atid])
+ 
     # set selection (group or mesh)
     selected_objects.append(obj)
     obj.traverse(partial(set_material, selected_material))
@@ -292,10 +309,21 @@ def select(event):
 
 def hover(event):
     obj = event.target
-    print("hovering", obj)
+    print("hovering", obj, event.type)
     if event.type == "pointer_enter":
         obj.add(outline)
-        outline.set_transform_by_object(obj, "local", scale=1.1)
+        if "vertex_index" in event.pick_info:
+            print("hover", event.pick_info["vertex_index"])    
+            # New position in 3D space
+            new_position = np.array(obj.coords[event.pick_info["vertex_index"]])
+            # Set the position of the BoxHelper
+            # or use self.set_transform_by_aabb(aabb, scale)
+            # make aabb arround the given atom
+            aabb = [new_position - np.array([-1,-1,-1]), new_position + np.array([-1,-1,-1])]
+            outline.set_transform_by_aabb(aabb, scale=1.)
+        else :
+            outline.set_transform_by_object(obj, "local", scale=1.1)
+        
     elif outline.parent:
         outline.parent.remove(outline)
 
@@ -319,6 +347,7 @@ def animate():
 filename = "1crn.pdb"
 st = gemmi.read_structure(filename)
 # bu = gemmi.make_assembly(st.assemblies[0], st[0], gemmi.HowToNameCopiedChain.AddNumber)
+
 coords = []
 for model in st:
     for chain in model:
@@ -328,20 +357,20 @@ for model in st:
 coords = np.array(coords).astype(np.float32)
 # center coords
 coords -= coords.mean(axis=0)
+print(len(coords))
+
 t = Triangle(
     gfx.Geometry(positions=coords),
     TriangleMaterial(color="yellow", pick_write=True),
 )
+t.setMol(st)
 # t.receive_shadow = True
 # t.cast_shadow = True
 t.add_event_handler(select, "click")
 t.add_event_handler(hover, "pointer_enter", "pointer_leave")
 scene.add(t)
 
-
 selected_objects = []
-
-
 
 if __name__ == "__main__":
     renderer.add_event_handler(select, "click")
