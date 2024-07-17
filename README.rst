@@ -37,24 +37,14 @@ permission. He says:
 Installing
 ==========
 
-.. Note:: Installation is broken. The description here outlines how
-          it *should* have worked.
-
 Try ::
 
   python setup.py build
-
-Compiling on Mac OS X 10.6.5 with MacPorts failed because ``glewpy``
-appears to be broken and ``glewpy`` is not maintained anymore
-(`Macports Ticket 18066`_). Perhaps it needs to be rewritten with
-PyOpenGL?
 
  
 .. _QuteMol:  http://qutemol.sourceforge.net/
 .. _Issue Tracker: https://github.com/MDAnalysis/pyQuteMol/issues
 .. _MDAnalysis: http://www.mdanalysis.org
-.. _Macports Ticket 18066:
-   https://trac.macports.org/ticket/18066
 
 Usage
 =====
@@ -72,6 +62,7 @@ pip install pillow
 pip install cython
 pip install PyOpenGL
 pip install mdanalysis
+# install freeglut and glew
 python setup.py build_ext --inplace --verbose
 
 python qutemol.py 1crn.pdb 0 0
