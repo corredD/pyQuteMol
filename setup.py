@@ -60,7 +60,7 @@ elif sys.platform == "darwin":
     libraries = ["GLEW"]
 elif sys.platform.startswith("linux"):
     extra_link_args = []
-    libraries = ["GL", "GLU"]
+    libraries = ["GL", "GLU", "GLEW"]
 else:
     extra_link_args = []
     libraries = ["GL", "GLU"]
